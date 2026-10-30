@@ -10,6 +10,7 @@
   --body:"Cairo",system-ui,"Segoe UI",Tahoma,sans-serif;
   color-scheme:dark;
 }
+[hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overflow:hidden;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none}

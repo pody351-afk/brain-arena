@@ -7,11 +7,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'test-output');
 fs.mkdirSync(OUT, { recursive: true });
-// نفس الغلاف اللي منصة النشر بتحطه حوالين الصفحة
-const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}</style></head><body>' +
-  fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8') + '</body></html>';
-const PAGE = path.join(ROOT, '_test_page.html'); // جنب index.html عشان المسارات النسبية (css/ و js/) تشتغل
-fs.writeFileSync(PAGE, html);
+const PAGE = path.join(ROOT, 'index.html'); // بنختبر الملف نفسه زي ما GitHub بيعرضه
 const URL = 'file://' + PAGE;
 
 let pass = 0, fail = 0;

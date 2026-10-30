@@ -5,8 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'test-output'); fs.mkdirSync(OUT, { recursive: true });
-const PAGE = path.join(ROOT, '_test_page.html');
-fs.writeFileSync(PAGE, '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}</style></head><body>' + fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8') + '</body></html>');
+const PAGE = path.join(ROOT, 'index.html');
+// بنختبر index.html نفسه زي ما GitHub بيعرضه بالظبط (من غير غلاف)
 const URL = 'file://' + PAGE;
 let pass = 0, fail = 0; const failures = [];
 const check = (c, n, x = '') => { if (c) { pass++; console.log('PASS ', n); } else { fail++; failures.push(n); console.log('FAIL ', n, x); } };
