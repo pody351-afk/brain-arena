@@ -25,6 +25,7 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 
 /* ---------- home ---------- */
 #home{flex:1;overflow-y:auto;padding-block:20px 24px;display:flex;flex-direction:column;gap:14px}
+#home>*{flex-shrink:0}
 .brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .brand h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,13vw,64px);line-height:1;margin:0;color:var(--mango);
   text-shadow:0 4px 0 #b4741a}
@@ -63,7 +64,7 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .bar{height:100%;background:linear-gradient(90deg,var(--mint),var(--mango));transform-origin:right;border-radius:99px;transition:transform .1s linear}
 .bar.low{background:var(--bad);animation:blink .5s infinite alternate}
 @keyframes blink{to{opacity:.55}}
-.stage{flex:1;min-height:0;position:relative}
+.stage{flex:1;min-height:0;position:relative;container-type:size}
 .shake{animation:shake .35s}
 @keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
 
@@ -82,7 +83,7 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .ans.ltr{direction:ltr}
 .ans.right{outline:5px solid var(--fg)}
 .ans.wrong{opacity:.4}
-.odd{display:grid;gap:8px;width:min(100%,340px)}
+.odd{display:grid;gap:8px;width:min(100%,340px,max(140px,100cqh - 120px))}
 .odd button{aspect-ratio:1;border-radius:50%;transition:transform .08s}
 .odd button:active{transform:scale(.9)}
 .odd button.wrong{outline:4px solid var(--bad)}
@@ -104,12 +105,15 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .candy.popping::before{animation:popout .17s forwards}
 @keyframes popout{to{transform:scale(1.5);opacity:0}}
 .candy.wob::before{animation:wob .3s}
+.pop-board:focus{outline:none}
+.pop-cursor{position:absolute;left:0;top:0;width:var(--cell);height:var(--cell);border:3px solid var(--fg);border-radius:12px;box-sizing:border-box;pointer-events:none;display:none;transition:transform .1s}
+.pop-board:focus-visible .pop-cursor{display:block}
 @keyframes wob{30%{transform:rotate(-14deg)}70%{transform:rotate(12deg)}}
 
 /* memory */
 .mem-wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 .mem-msg{font-size:20px;font-weight:900;min-height:32px;text-align:center}
-.mem-grid{display:grid;gap:8px;width:min(100%,380px)}
+.mem-grid{display:grid;gap:8px;width:min(100%,380px,max(150px,100cqh - 60px))}
 .mem-grid button{aspect-ratio:1;border-radius:16px;background:var(--panel2);box-shadow:0 5px 0 #170f28;transition:background .15s,transform .15s}
 .mem-grid button.lit{background:var(--sky);box-shadow:0 0 22px var(--sky),0 5px 0 #24478a;transform:scale(1.04)}
 .mem-grid button.ok{background:var(--mint);box-shadow:0 5px 0 #1d7a52}
@@ -232,6 +236,8 @@ const sfx = {
   over() { [392, 330, 262].forEach((f, i) => setTimeout(() => tone(f, 0.22, "triangle", 0.15), i * 150)); },
   blip() { tone(660, 0.05, "sine", 0.08); }
 };
+// الكيبورد: Enter/Space على زرار بيعمل click بـ detail = 0. اللمس والماوس بيتعاملوا مع pointerdown بس، فمفيش حساب مرتين.
+function onKeyActivate(el, fn) { el.addEventListener("click", e => { if (e.detail === 0) fn(); }); }
 function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 
 /* ---------- effects ---------- */
@@ -322,7 +328,7 @@ const SpeedBrain = {
   hud() { setInfo(`<span>صح: ${this.s.correct}</span><span>${this.mult() > 1 ? "مضاعف ×" + this.mult() : "اجمع 3 صح ورا بعض للمضاعف"}</span>`); },
   loop(t) {
     const s = this.s; if (!s.alive) return;
-    s.time -= (t - s.last) / 1000; s.last = t;
+    s.time -= Math.min(0.1, Math.max(0, (t - s.last) / 1000)); s.last = t; // أقصى 0.1 ثانية للفريم: الرجوع بعد غياب ما يخصمش الوقت كله
     setBar(s.time / s.max);
     if (s.time <= 0) { s.alive = false; setBar(0); gameOver(`جاوبت ${s.correct} صح`); return; }
     this.raf = requestAnimationFrame(tt => this.loop(tt));
@@ -341,6 +347,7 @@ const SpeedBrain = {
       const b = document.createElement("button");
       b.type = "button"; b.className = "ans " + (a.cls || ""); b.textContent = a.label;
       b.addEventListener("pointerdown", e => { e.preventDefault(); this.answer(a.correct, b); });
+      onKeyActivate(b, () => this.answer(a.correct, b));
       ans.appendChild(b);
     });
     ans.hidden = !(q.answers && q.answers.length);
@@ -378,6 +385,7 @@ const SpeedBrain = {
       b.style.background = `hsl(${h} 72% ${i === idx ? L + delta : L}%)`;
       b.setAttribute("aria-label", "دايرة " + (i + 1));
       b.addEventListener("pointerdown", e => { e.preventDefault(); this.answer(i === idx, b); });
+      onKeyActivate(b, () => this.answer(i === idx, b));
       grid.appendChild(b);
     }
     return { prompt: "فين اللون المختلف؟", grid, answers: [] };
@@ -414,14 +422,15 @@ const Pop = {
   COLORS: ["#ff6b6b", "#3ddc97", "#4d9dff", "#ffc93c", "#b388ff"],
   start() {
     this.s = { score: 0, level: 1, moves: 20, base: 0, target: 600, busy: false, grid: [], id: 1 };
-    ui.stage.innerHTML = '<div class="pop-wrap"><div class="pop-board" id="popBoard"></div></div>';
-    this.board = $("#popBoard"); this.els = new Map();
+    ui.stage.innerHTML = '<div class="pop-wrap"><div class="pop-board" id="popBoard" tabindex="0" aria-label="لوحة فرقع: الأسهم للتحرك و Enter للفرقعة"><div class="pop-cursor" id="popCursor"></div></div></div>';
+    this.board = $("#popBoard"); this.els = new Map(); this.cur = { r: this.ROWS - 1, c: 0 };
     for (let r = 0; r < this.ROWS; r++) { const row = []; for (let c = 0; c < this.COLS; c++) row.push(this.newCell(r - this.ROWS - 1)); this.s.grid.push(row); }
     this.ensurePlayable();
     this.layout(); this.render();
     this.onResize = () => { this.layout(); this.render(); };
     addEventListener("resize", this.onResize);
     this.board.addEventListener("pointerdown", this.onTap = e => { e.preventDefault(); this.tap(e); });
+    this.board.addEventListener("keydown", e => this.onKey(e));
     this.hud();
   },
   stop() { removeEventListener("resize", this.onResize); if (this.s) this.s.busy = true; },
@@ -431,6 +440,7 @@ const Pop = {
     this.cell = Math.max(24, Math.floor(Math.min(w / this.COLS, h / this.ROWS)));
     this.board.style.width = this.cell * this.COLS + "px"; this.board.style.height = this.cell * this.ROWS + "px";
     this.board.style.setProperty("--cell", this.cell + "px");
+    this.drawCursor();
   },
   render() {
     const cs = this.cell;
@@ -466,10 +476,23 @@ const Pop = {
     }
     return out;
   },
+  onKey(e) {
+    const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+    if (moves[e.key]) {
+      e.preventDefault();
+      this.cur.r = Math.max(0, Math.min(this.ROWS - 1, this.cur.r + moves[e.key][0]));
+      this.cur.c = Math.max(0, Math.min(this.COLS - 1, this.cur.c + moves[e.key][1]));
+      this.drawCursor();
+    } else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.tapAt(this.cur.r, this.cur.c); }
+  },
+  drawCursor() { const k = $("#popCursor"); if (k) k.style.transform = `translate(${this.cur.c * this.cell}px,${this.cur.r * this.cell}px)`; },
   tap(e) {
-    const s = this.s; if (s.busy) return;
     const rect = this.board.getBoundingClientRect();
     const c = Math.floor((e.clientX - rect.left) / this.cell), r = Math.floor((e.clientY - rect.top) / this.cell);
+    this.tapAt(r, c);
+  },
+  tapAt(r, c) {
+    const s = this.s; if (s.busy) return;
     if (r < 0 || c < 0 || r >= this.ROWS || c >= this.COLS) return;
     const cell = s.grid[r][c]; if (!cell) return;
     const tapEl = this.els.get(cell.id);
@@ -567,6 +590,7 @@ const Mem = {
     for (let i = 0; i < n * n; i++) {
       const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "مربع " + (i + 1));
       b.addEventListener("pointerdown", e => { e.preventDefault(); this.tapCell(i, b); });
+      onKeyActivate(b, () => this.tapCell(i, b));
       grid.appendChild(b); this.cells.push(b);
     }
     this.msg(`ركّز... ${cnt} مربعات`);
