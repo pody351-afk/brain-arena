@@ -46,25 +46,25 @@ const xp = page => page.evaluate(() => __mal3ab.Progress.data.xp);
       for (let i = 0; i < 60; i++) { const d = new Date(2026, 9, 1 + i); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; out.push(Meta.dailySpec(k)); }
       const a = JSON.stringify(Meta.dailySpec('2026-11-05')), b = JSON.stringify(Meta.dailySpec('2026-11-05'));
       return { same: a === b, names: [...new Set(out.map(x => x.name))].length, games: [...new Set(out.map(x => x.game))].sort().join(','),
-        valid: out.every(x => ['speed', 'pop', 'mem'].includes(x.game) && x.goal && x.cfg && x.cfg.mode === 'level'),
+        valid: out.every(x => ['speed', 'pop', 'mem', 'word'].includes(x.game) && x.goal && x.cfg && x.cfg.mode === 'level'),
         consecutiveDiff: out.filter((x, i) => i && x.name !== out[i - 1].name).length };
     });
     check(r.same, 'التحدي اليومي: نفس اليوم = نفس التحدي');
     check(r.names >= 8, 'التحدي اليومي: أنواع كتير على مدار 60 يوم', r.names);
-    check(r.games === 'mem,pop,speed', 'التحدي اليومي: الألعاب التلاتة بتيجي', r.games);
+    check(r.games === 'mem,pop,speed,word', 'التحدي اليومي: الألعاب الأربعة بتيجي', r.games);
     check(r.valid, 'التحدي اليومي: كل التحديات بيانات سليمة');
     check(r.consecutiveDiff >= 45, 'التحدي اليومي: غالبًا مختلف عن امبارح', r.consecutiveDiff);
     // كل قالب يشتغل فعلًا جوه اللعبة من غير أخطاء
     const ran = await page.evaluate(async () => {
       const { App, Meta } = __mal3ab, seen = {}, errs = [];
-      for (let i = 0; i < 120 && Object.keys(seen).length < 10; i++) {
+      for (let i = 0; i < 400 && Object.keys(seen).length < 11; i++) {
         const D = Meta.dailySpec('2027-01-' + String(1 + (i % 28)).padStart(2, '0') + (i >= 28 ? 'x' + i : ''));
         if (seen[D.name]) continue; seen[D.name] = 1;
         try { App.startLevel(D); await new Promise(r => setTimeout(r, 150)); if (!document.querySelector('#stage').children.length) errs.push(D.name + ': empty'); App.stopGame(); App.run = null; } catch (e) { errs.push(D.name + ': ' + e.message); }
       }
       App.show('home'); return { n: Object.keys(seen).length, errs };
     });
-    check(ran.n === 10 && !ran.errs.length, 'التحدي اليومي: القوالب العشرة بتشتغل في اللعبة', JSON.stringify(ran));
+    check(ran.n === 11 && !ran.errs.length, 'التحدي اليومي: القوالب الـ 11 بتشتغل في اللعبة', JSON.stringify(ran));
     check(!page.errors.length, 'التحدي اليومي: من غير أخطاء JS', page.errors.join(' | '));
     await page.context().close();
   }
@@ -175,7 +175,7 @@ const xp = page => page.evaluate(() => __mal3ab.Progress.data.xp);
   {
     const page = await newPage(browser);
     const n = await page.evaluate(() => __mal3ab.ACHIEVEMENTS.length);
-    check(n === 19 && await page.evaluate(() => new Set(__mal3ab.ACHIEVEMENTS.map(a => a.id)).size) === 19, 'الإنجازات: 19 إنجاز بأسماء مختلفة');
+    check(n === 20 && await page.evaluate(() => new Set(__mal3ab.ACHIEVEMENTS.map(a => a.id)).size) === 20, 'الإنجازات: 20 إنجاز بأسماء مختلفة');
     check(await page.evaluate(() => __mal3ab.Meta.achCount()) === 0, 'الإنجازات: لاعب جديد = 0');
     const x0 = await xp(page);
     await page.evaluate(() => { const { App, LEVELS } = __mal3ab; App.startLevel(LEVELS[0]); App.current.stop(); App.onPartEnd({ game: 'speed', won: true, score: 50, mistakes: 0, correct: 7 }); });
@@ -197,7 +197,7 @@ const xp = page => page.evaluate(() => __mal3ab.Progress.data.xp);
     check(await xp(page) === o.xp, 'الإنجازات: تحديث تاني ما بيزوّدش');
     await page.evaluate(() => __mal3ab.App.show('quests')); await sleep(200);
     const t = await page.innerText('#quests');
-    check(t.includes('6 من 19') && (await page.locator('.ach.done').count()) === 6, 'الإنجازات: الشاشة بتعرض المفتوح والمقفول', t.slice(-200));
+    check(t.includes('6 من 20') && (await page.locator('.ach.done').count()) === 6, 'الإنجازات: الشاشة بتعرض المفتوح والمقفول', t.slice(-200));
     check(!page.errors.length, 'الإنجازات: من غير أخطاء JS', page.errors.join(' | '));
     await page.context().close();
   }

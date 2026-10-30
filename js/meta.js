@@ -25,6 +25,7 @@ const DAILY_TEMPLATES = [
   r => ({ name: "الترتيب الصح", ...M("order", 4, 5, 3) }),
   r => ({ name: "أرقام وبس", ...M("numbers", 0, 6, 3) }),
   r => ({ name: "بالعكس", ...M("reverse", 4, 4, 3) }),
+  r => ({ name: "كلمة اليوم", ...W(WORD_PUZZLES[WORD_TIERS[4][Math.floor(r() * WORD_TIERS[4].length)]].l, 99, 80) }),
 ];
 const DAILY_XP = 60, DAILY_STREAK_XP = 10; // + 10 لكل يوم في السلسلة لحد 7
 
@@ -39,6 +40,7 @@ const QUESTS_DAY = [
   { id: "d_mem2", text: "العب «افتكر» مرتين", ev: "game_mem", target: 2 },
   { id: "d_free1", text: "العب مرة في اللعب الحر", ev: "free", target: 1 },
   { id: "d_daily", text: "خلّص التحدي اليومي", ev: "daily", target: 1 },
+  { id: "d_words10", text: "لاقي 10 كلمات في «كوّن كلمة»", ev: "word_found", target: 10 },
 ];
 const QUESTS_WEEK = [
   { id: "w_play20", text: "العب 20 مرة", ev: "play", target: 20 },
@@ -48,6 +50,7 @@ const QUESTS_WEEK = [
   { id: "w_boss1", text: "اغلب زعيم", ev: "boss", target: 1, needs: () => Progress.isUnlocked(10) },
   { id: "w_daily3", text: "خلّص التحدي اليومي 3 أيام", ev: "daily", target: 3 },
   { id: "w_free5", text: "العب 5 مرات في اللعب الحر", ev: "free", target: 5 },
+  { id: "w_words60", text: "لاقي 60 كلمة في «كوّن كلمة»", ev: "word_found", target: 60 },
 ];
 const QUEST_XP = { day: 25, week: 100 };
 
@@ -57,20 +60,21 @@ const ACHIEVEMENTS = [
   { id: "a_first", name: "أول خطوة", desc: "خلّص أول مستوى", xp: 20, have: () => P_().completed(), need: 1 },
   { id: "a_lv10", name: "بداية قوية", desc: "خلّص 10 مستويات", xp: 40, have: () => P_().completed(), need: 10 },
   { id: "a_lv50", name: "نص الطريق", desc: "خلّص 50 مستوى", xp: 150, have: () => P_().completed(), need: 50 },
-  { id: "a_lv100", name: "خلّصت الملعب", desc: "خلّص الـ 100 مستوى", xp: 500, have: () => P_().completed(), need: 100 },
+  { id: "a_lv100", name: "خلّصت الملعب", desc: "خلّص 100 مستوى", xp: 500, have: () => P_().completed(), need: 100 },
   { id: "a_boss1", name: "صياد الزعماء", desc: "اغلب أول زعيم", xp: 60, have: () => P_().bossesBeaten(), need: 1 },
   { id: "a_boss5", name: "مرعب الزعماء", desc: "اغلب 5 زعماء", xp: 200, have: () => P_().bossesBeaten(), need: 5 },
-  { id: "a_boss10", name: "قاهر الزعماء", desc: "اغلب الزعماء العشرة", xp: 500, have: () => P_().bossesBeaten(), need: 10 },
+  { id: "a_boss10", name: "قاهر الزعماء", desc: "اغلب 10 زعماء", xp: 500, have: () => P_().bossesBeaten(), need: 10 },
   { id: "a_star30", name: "جامع النجوم", desc: "اجمع 30 نجمة", xp: 60, have: () => P_().totalStars(), need: 30 },
   { id: "a_star150", name: "سما منوّرة", desc: "اجمع 150 نجمة", xp: 250, have: () => P_().totalStars(), need: 150 },
-  { id: "a_star300", name: "الكمال", desc: "اجمع الـ 300 نجمة كلها", xp: 800, have: () => P_().totalStars(), need: 300 },
+  { id: "a_star300", name: "الكمال", desc: "اجمع 300 نجمة", xp: 800, have: () => P_().totalStars(), need: 300 },
   { id: "a_perfect10", name: "مثالي", desc: "خد 3 نجوم في 10 مستويات", xp: 100, have: () => Object.values(P_().data.levels).filter(r => r.stars === 3).length, need: 10 },
   { id: "a_world1", name: "أول عالم", desc: "كمّل عالم كامل", xp: 80, have: () => Object.keys(P_().data.worldsDone).length, need: 1 },
   { id: "a_world4", name: "رحّالة", desc: "كمّل 4 عوالم", xp: 250, have: () => Object.keys(P_().data.worldsDone).length, need: 4 },
   { id: "a_daily1", name: "تحدي النهارده", desc: "خلّص أول تحدي يومي", xp: 30, have: () => M_().stats.daily, need: 1 },
   { id: "a_streak3", name: "مواظب", desc: "خلّص التحدي اليومي 3 أيام ورا بعض", xp: 60, have: () => M_().streak.best, need: 3 },
   { id: "a_streak7", name: "أسبوع كامل", desc: "خلّص التحدي اليومي 7 أيام ورا بعض", xp: 200, have: () => M_().streak.best, need: 7 },
-  { id: "a_free3", name: "جرّب كله", desc: "العب الألعاب التلاتة في اللعب الحر", xp: 30, have: () => ["speed", "pop", "mem"].filter(g => M_().stats.freeGames[g]).length, need: 3 },
+  { id: "a_free3", name: "جرّب كله", desc: "العب الألعاب الأربعة في اللعب الحر", xp: 30, have: () => ["speed", "pop", "mem", "word"].filter(g => M_().stats.freeGames[g]).length, need: 4 },
+  { id: "a_words100", name: "قاموس ماشي", desc: "لاقي 100 كلمة في «كوّن كلمة»", xp: 150, have: () => M_().stats.words, need: 100 },
   { id: "a_games50", name: "مدمن ملعب", desc: "العب 50 مرة", xp: 150, have: () => M_().stats.plays, need: 50 },
   { id: "a_quest10", name: "شغّيل", desc: "استلم مكافأة 10 مهام", xp: 100, have: () => M_().stats.questsClaimed, need: 10 },
 ];
@@ -83,13 +87,13 @@ const Meta = {
   fresh() {
     return { v: this.V, daily: { date: "", done: false, stars: 0, best: 0, plays: 0 }, streak: { count: 0, last: "", best: 0 },
       ach: {}, quests: { day: null, week: null },
-      stats: { plays: 0, daily: 0, questsClaimed: 0, freeGames: {} } };
+      stats: { plays: 0, daily: 0, questsClaimed: 0, words: 0, freeGames: {} } };
   },
   load() {
     let d = store.get(this.KEY, null);
     const ok = d && d.v === this.V && d.daily && d.streak && d.ach && d.quests && d.stats;
     if (!ok) d = this.fresh();
-    d.stats.freeGames = d.stats.freeGames || {};
+    d.stats.freeGames = d.stats.freeGames || {}; d.stats.words = d.stats.words || 0;
     this.data = d;
     this.refresh(false);
     return d;
@@ -157,6 +161,7 @@ const Meta = {
     for (const r of info.results || []) {
       c["game_" + r.game] = (c["game_" + r.game] || 0) + 1;
       if (r.game === "speed") c.speed_correct = (c.speed_correct || 0) + (r.correct | 0);
+      if (r.game === "word") { c.word_found = (c.word_found || 0) + (r.found | 0); d.stats.words += r.found | 0; }
     }
     if (info.mode === "level" && info.won) { c.win_level = 1; if (info.stars === 3) c.stars3 = 1; if (info.boss) c.boss = 1; }
     if (info.mode === "free") { c.free = 1; const g = info.results[0] && info.results[0].game; if (g) d.stats.freeGames[g] = (d.stats.freeGames[g] || 0) + 1; }

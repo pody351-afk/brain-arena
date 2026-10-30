@@ -1,6 +1,6 @@
 /* app.js — الشاشات والتنقل وتشغيل المستويات والزعماء. */
 "use strict";
-const GAMES = { speed: SpeedBrain, pop: Pop, mem: Mem };
+const GAMES = { speed: SpeedBrain, pop: Pop, mem: Mem, word: WordGame };
 Progress.load();
 Meta.load();
 Meta.checkAchievements(); // لو عندك تقدّم قديم يستاهل إنجازات
@@ -71,7 +71,7 @@ const App = {
   /* ---------- الخريطة ---------- */
   render_map() {
     const cur = Progress.nextLevel().n;
-    let h = `<h2 class="h2">خريطة المستويات</h2><p class="sub">8 عوالم و100 مستوى. كل 10 مستويات فيه زعيم بيجمع الألعاب التلاتة. نجمة واحدة تكفي عشان تفتح اللي بعده.</p>`;
+    let h = `<h2 class="h2">خريطة المستويات</h2><p class="sub">${WORLDS.length} عوالم و${LEVELS.length} مستوى. كل 10 مستويات فيه زعيم بيجمع كذا لعبة. نجمة واحدة تكفي عشان تفتح اللي بعده، و«عالم الكلمات» مفتوح من الأول.</p>`;
     for (const w of WORLDS) {
       const unlocked = Progress.isUnlocked(w.from), st = Progress.worldStars(w), max = (w.to - w.from + 1) * 3;
       h += `<section class="world${unlocked ? "" : " locked"}" style="--w:${w.color}" id="world${w.id}">
@@ -120,7 +120,7 @@ const App = {
     $("#goLevel").focus();
   },
 
-  limitsFor(L) { return L.boss ? "" : L.game === "speed" ? `<div>الوقت: ${L.cfg.time} ثانية · الغلطة بـ 3 ثواني</div>` : L.game === "mem" ? "<div>معاك 3 قلوب</div>" : `<div>الحركات: ${L.cfg.moves}</div>`; },
+  limitsFor(L) { return L.boss ? "" : L.game === "speed" ? `<div>الوقت: ${L.cfg.time} ثانية · الغلطة بـ 3 ثواني</div>` : L.game === "mem" ? "<div>معاك 3 قلوب</div>" : L.game === "word" ? `<div>الوقت: ${L.cfg.time} ثانية · ${L.cfg.hints} تلميحات</div>` : `<div>الحركات: ${L.cfg.moves}</div>`; },
 
   /* ---------- التحدي اليومي ---------- */
   dailySheet() {
@@ -213,12 +213,13 @@ const App = {
   starsFor(L, results) {
     if (L.boss) {
       let pen = 0;
-      for (const r of results) { if (r.game === "speed") pen += r.mistakes; if (r.game === "mem") pen += 3 - r.livesLeft; if (r.game === "pop" && r.movesLeft / r.movesTotal < 0.12) pen++; }
+      for (const r of results) { if (r.game === "speed") pen += r.mistakes; if (r.game === "mem") pen += 3 - r.livesLeft; if (r.game === "pop" && r.movesLeft / r.movesTotal < 0.12) pen++; if (r.game === "word") pen += r.hintsUsed; }
       return pen === 0 ? 3 : pen <= 2 ? 2 : 1;
     }
     const r = results[0];
     if (r.game === "speed") return r.mistakes === 0 ? 3 : r.mistakes <= 2 ? 2 : 1;
     if (r.game === "mem") return Math.max(1, r.livesLeft);
+    if (r.game === "word") return r.hintsUsed === 0 ? 3 : r.hintsUsed === 1 ? 2 : 1;
     const q = r.movesLeft / r.movesTotal; return q >= 0.25 ? 3 : q >= 0.1 ? 2 : 1;
   },
   resultSheet(L, won, res, score, runStars) {
@@ -286,14 +287,14 @@ const App = {
       <div class="stat-grid">
         <div class="stat"><b>${Progress.totalStars()}</b><span>نجمة من ${LEVELS.length * 3}</span></div>
         <div class="stat"><b>${Progress.completed()}</b><span>مستوى خلّصته من ${LEVELS.length}</span></div>
-        <div class="stat"><b>${Progress.bossesBeaten()}</b><span>زعيم غلبته من 10</span></div>
-        <div class="stat"><b>${worlds}</b><span>عالم كمّلته من 8</span></div>
+        <div class="stat"><b>${Progress.bossesBeaten()}</b><span>زعيم غلبته من ${LEVELS.filter(L => L.boss).length}</span></div>
+        <div class="stat"><b>${worlds}</b><span>عالم كمّلته من ${WORLDS.length}</span></div>
         <div class="stat"><b>${Meta.achCount()}</b><span>إنجاز من ${ACHIEVEMENTS.length}</span></div>
         <div class="stat"><b>${Meta.data.streak.best}</b><span>أطول سلسلة تحدي يومي</span></div>
       </div>
       <h2 class="h2" style="font-size:24px">أحسن نتايج اللعب الحر</h2>
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
-        ${["speed", "pop", "mem"].map(g => `<div class="stat"><b style="font-size:28px">${d.best[g] || 0}</b><span>${GAME_NAMES[g]}</span></div>`).join("")}
+      <div class="stat-grid">
+        ${["speed", "pop", "mem", "word"].map(g => `<div class="stat"><b style="font-size:28px">${d.best[g] || 0}</b><span>${GAME_NAMES[g]}</span></div>`).join("")}
       </div>
       <div class="note-box">تقدّمك محفوظ على الجهاز ده بس. لما نضيف الحسابات (مرحلة الأونلاين) هتقدر تنقله وتلعب من أي جهاز.</div>`;
   },
@@ -347,7 +348,7 @@ const App = {
     });
   }
 };
-const APP_VERSION = "1.3";
+const APP_VERSION = "1.4";
 
 /* ---------- ربط الأزرار ---------- */
 document.querySelectorAll(".card[data-g]").forEach(c => c.addEventListener("click", () => App.openGame(c.dataset.g)));

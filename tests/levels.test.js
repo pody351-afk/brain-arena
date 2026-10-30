@@ -63,9 +63,9 @@ async function testData(browser) {
   const page = await newPage(browser);
   const d = await page.evaluate(() => {
     const { LEVELS, WORLDS } = __mal3ab;
-    const sig = L => L.boss ? 'boss' + L.n : L.game + ':' + JSON.stringify(L.game === 'speed' ? [L.cfg.types, L.cfg.goal, L.cfg.time] : L.game === 'mem' ? [L.cfg.variant, L.cfg.size, L.cfg.count] : [L.cfg.goal, L.cfg.moves]);
+    const sig = L => L.boss ? 'boss' + L.n : L.game + ':' + JSON.stringify(L.game === 'speed' ? [L.cfg.types, L.cfg.goal, L.cfg.time] : L.game === 'mem' ? [L.cfg.variant, L.cfg.size, L.cfg.count] : L.game === 'word' ? [L.cfg.p, L.cfg.need] : [L.cfg.goal, L.cfg.moves]);
     const sigs = LEVELS.filter(L => !L.boss).map(sig);
-    const kinds = new Set(LEVELS.filter(L => !L.boss).map(L => L.game + ':' + (L.game === 'speed' ? L.cfg.types.join('+') : L.game === 'mem' ? L.cfg.variant : L.cfg.goal.type)));
+    const kinds = new Set(LEVELS.filter(L => !L.boss).map(L => L.game + ':' + (L.game === 'speed' ? L.cfg.types.join('+') : L.game === 'mem' ? L.cfg.variant : L.game === 'word' ? WORD_PUZZLES[L.cfg.p].l : L.cfg.goal.type)));
     let consecutiveSame = 0; for (let i = 1; i < LEVELS.length; i++) if (sig(LEVELS[i]) === sig(LEVELS[i - 1])) consecutiveSame++;
     const types = new Set(LEVELS.filter(L => L.game === 'speed').flatMap(L => L.cfg.types));
     const memV = new Set(LEVELS.filter(L => L.game === 'mem').map(L => L.cfg.variant));
@@ -73,13 +73,13 @@ async function testData(browser) {
     return { n: LEVELS.length, worlds: WORLDS.length, bosses: LEVELS.filter(L => L.boss).map(L => L.n).join(','), nums: LEVELS.every((L, i) => L.n === i + 1),
       goals: LEVELS.every(L => L.goal && L.goal.length > 10), distinct: new Set(sigs).size, total: sigs.length, kinds: kinds.size, consecutiveSame,
       types: [...types].length, memV: [...memV].join(','), popG: [...popG].join(','),
-      cover: WORLDS.every((w, i) => (i === 0 ? w.from === 1 : w.from === WORLDS[i - 1].to + 1)) && WORLDS[7].to === 100,
+      cover: WORLDS.every((w, i) => (i === 0 ? w.from === 1 : w.from === WORLDS[i - 1].to + 1)) && WORLDS[WORLDS.length - 1].to === LEVELS.length,
       xpOk: LEVELS.every(L => L.xpStar > 0 && L.xpFirst > 0), maxXP: LEVELS.reduce((a, L) => a + L.xpStar * 3 + L.xpFirst, 0) + WORLDS.reduce((a, w) => a + w.bonus, 0) };
   });
   console.log('   ', JSON.stringify(d));
-  check(d.n === 100 && d.nums, 'المستويات: 100 مستوى مترقمين من 1 لـ 100');
-  check(d.worlds === 8 && d.cover, 'العوالم: 8 عوالم بتغطي المستويات من غير فراغات');
-  check(d.bosses === '10,20,30,40,50,60,70,80,90,100', 'الزعماء: كل 10 مستويات');
+  check(d.n === 110 && d.nums, 'المستويات: 110 مستوى مترقمين من 1 لـ 110 (100 + عالم الكلمات)');
+  check(d.worlds === 9 && d.cover, 'العوالم: 9 عوالم بتغطي المستويات من غير فراغات');
+  check(d.bosses === '10,20,30,40,50,60,70,80,90,100,110', 'الزعماء: كل 10 مستويات');
   check(d.goals, 'كل مستوى ليه هدف مكتوب');
   check(d.distinct === d.total, `كل المستويات العادية مختلفة عن بعض (${d.distinct}/${d.total})`);
   check(d.consecutiveSame === 0, 'مفيش مستويين ورا بعض متطابقين');
@@ -94,7 +94,7 @@ async function testData(browser) {
     }
     __mal3ab.App.show('home'); return errs;
   });
-  check(bad.length === 0 && page.errors.length === 0, 'كل الـ 100 مستوى (و30 جزء زعيم) بيبدأوا من غير أخطاء', bad.concat(page.errors).join(' | '));
+  check(bad.length === 0 && page.errors.length === 0, 'كل الـ 110 مستوى (و33 جزء زعيم) بيبدأوا من غير أخطاء', bad.concat(page.errors).join(' | '));
   await page.context().close();
 }
 

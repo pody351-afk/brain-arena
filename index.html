@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@500;700;900&display=swap" media="print" onload="this.media='all'">
 <style>[hidden]{display:none!important}</style>
-<link rel="stylesheet" href="css/app.css?v=1.3">
+<link rel="stylesheet" href="css/app.css?v=1.4">
 </head>
 <body>
 
@@ -36,6 +36,10 @@
     <button class="card" data-g="mem" type="button">
       <div><div class="nm">افتكر</div><div class="ds">مربعات بتنوّر لحظة وتطفي. افتكرها كلها. كل مستوى بيزيد مربع.</div><div class="bs" data-best="mem"></div></div>
       <div class="art"><div class="art-grid"><i></i><i class="lit"></i><i></i><i class="lit"></i><i></i><i></i><i></i><i></i><i class="lit"></i></div></div>
+    </button>
+    <button class="card" data-g="word" type="button">
+      <div><div class="nm">كوّن كلمة</div><div class="ds">حروف متلخبطة قدامك. دوس عليها بالترتيب وكوّن كل الكلمات المخبّية قبل الوقت ما يخلص.</div><div class="bs" data-best="word"></div></div>
+      <div class="art"><div class="art-ring"><b>ق</b><b>ل</b><b>ب</b></div></div>
     </button>
 
     <div class="soon-row">
@@ -90,13 +94,15 @@
 /* لو حصل خطأ يظهر على الشاشة بدل الشاشة السودا (للتشخيص) */
 window.addEventListener("error",function(e){var d=document.getElementById("__err");if(!d){d=document.createElement("pre");d.id="__err";d.style.cssText="position:fixed;inset:auto 8px 8px 8px;z-index:99999;background:#400;color:#fff;padding:10px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;direction:ltr;max-height:40vh;overflow:auto";document.body.appendChild(d);}d.textContent+=(e.message||"error")+" @ "+(e.filename||"").split("/").pop()+":"+(e.lineno||"")+"\n";});
 </script>
-<script src="js/core.js?v=1.3"></script>
-<script src="js/progress.js?v=1.3"></script>
-<script src="js/levels.js?v=1.3"></script>
-<script src="js/meta.js?v=1.3"></script>
-<script src="js/games/speed.js?v=1.3"></script>
-<script src="js/games/pop.js?v=1.3"></script>
-<script src="js/games/mem.js?v=1.3"></script>
-<script src="js/app.js?v=1.3"></script>
+<script src="js/core.js?v=1.4"></script>
+<script src="js/progress.js?v=1.4"></script>
+<script src="js/words.js?v=1.4"></script>
+<script src="js/levels.js?v=1.4"></script>
+<script src="js/meta.js?v=1.4"></script>
+<script src="js/games/speed.js?v=1.4"></script>
+<script src="js/games/pop.js?v=1.4"></script>
+<script src="js/games/mem.js?v=1.4"></script>
+<script src="js/games/word.js?v=1.4"></script>
+<script src="js/app.js?v=1.4"></script>
 </body>
 </html>

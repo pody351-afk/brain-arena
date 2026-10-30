@@ -11,10 +11,12 @@ const WORLDS = [
   { id: 6, name: "عالم السرعة", desc: "نفس المهارات بوقت أقل.", color: "#ff9f43", from: 62, to: 74 },
   { id: 7, name: "عالم العباقرة", desc: "تحديات مخلوطة وأطول.", color: "#2ec4b6", from: 75, to: 87 },
   { id: 8, name: "عالم الأساطير", desc: "أصعب حاجة في الملعب.", color: "#f368e0", from: 88, to: 100 },
+  // عالم الكلمات مفتوح من الأول (open)، مش لازم تخلّص الـ 100 مستوى عشان توصله
+  { id: 9, name: "عالم الكلمات", desc: "كوّن كلمات من الحروف. مفتوح من البداية.", color: "#00d2d3", from: 101, to: 110, open: true },
 ];
 WORLDS.forEach(w => { w.bonus = 150 + 50 * (w.id - 1); });
 
-const GAME_NAMES = { speed: "أسرع مخ", pop: "فرقع", mem: "افتكر", boss: "زعيم" };
+const GAME_NAMES = { speed: "أسرع مخ", pop: "فرقع", mem: "افتكر", word: "كوّن كلمة", boss: "زعيم" };
 const POP_COLOR_NAMES = ["الأحمر", "الأخضر", "الأزرق", "الأصفر", "البنفسجي"];
 const ALL_SPEED = ["tf", "bigger", "stroop", "odd", "missing", "pattern", "meaning", "smaller"];
 
@@ -22,6 +24,11 @@ const ALL_SPEED = ["tf", "bigger", "stroop", "odd", "missing", "pattern", "meani
 // أرقام فرقع متعايرة بالمحاكاة (tests/calibrate-pop.js): لاعب بسيط من غير تخطيط بيكسب من 97% في الأول لحوالي 82% في الآخر.
 const S = (types, goal, time, base = 0) => ({ game: "speed", cfg: { mode: "level", types, goal, time, base, bonus: false } });
 const M = (variant, size, count, rounds = 3, fast = false) => ({ game: "mem", cfg: { mode: "level", variant, size, count, rounds, fast } });
+// W: لغز «كوّن كلمة» معيّن بحروفه، وعدد الكلمات المطلوبة، والوقت
+const W = (letters, need, time, hints = 3) => {
+  const p = WORD_BY_LETTERS[letters]; if (p == null) throw new Error("لغز مش موجود: " + letters);
+  return { game: "word", cfg: { mode: "level", p, need: Math.min(need, WORD_PUZZLES[p].w.length), time, hints } };
+};
 const P = (type, val, moves, colors = 5) => {
   const goal = type === "color" ? { type, k: val.k, n: val.n } : { type, n: val };
   return { game: "pop", cfg: { mode: "level", goal, moves, colors, stones: type === "stones" ? val : 0 } };
@@ -45,9 +52,12 @@ const PLAN = {
       P("score", 1300, 20), M("order", 5, 7, 3), S(ALL_SPEED, 18, 50, 6), P("color", { k: 0, n: 15 }, 20), M("reverse", 5, 7, 3), S(["pattern", "missing"], 14, 40, 7)],
   8: [S(ALL_SPEED, 18, 45, 8), M("numbers", 0, 9, 3), P("stones", 18, 12), M("reverse", 5, 8, 3), S(["meaning", "smaller", "pattern", "missing"], 18, 45, 8), P("bombs", 4, 24, 4),
       M("order", 6, 8, 3), S(ALL_SPEED, 20, 45, 9), P("score", 1550, 22), M("numbers", 0, 10, 3), S(ALL_SPEED, 22, 45, 10)],
+  9: [W("حلم", 4, 60), W("قرب", 4, 60), W("كتاب", 4, 70), W("عربي", 5, 75), W("بحار", 6, 80), W("ساحر", 6, 80),
+      W("كرسي", 5, 70), W("مكتبا", 6, 90), W("مدرسا", 7, 100)],
 };
 
-function bossParts(k) { // k = 1..10
+function bossParts(k) { // k = 1..10، و11 = زعيم عالم الكلمات
+  if (k === 11) return [W("ملعبا", 7, 90, 2), S(ALL_SPEED, 14, 35, 8), M("order", 5, 6, 2, true)].map(x => ({ game: x.game, cfg: x.cfg }));
   const memV = ["squares", "order", "squares", "reverse", "numbers", "order", "reverse", "numbers", "order", "reverse"][k - 1];
   const types = k <= 2 ? ["tf", "bigger", "stroop"] : k <= 4 ? ["tf", "stroop", "odd", "missing"] : ALL_SPEED;
   return [
@@ -64,6 +74,10 @@ function goalText(spec) {
     const what = { squares: "افتكر المربعات اللي بتنوّر", order: "افتكر ترتيب المربعات ودوس بنفس الترتيب", reverse: "افتكر الترتيب ودوس بالعكس (من الآخر للأول)", numbers: "افتكر الأرقام واكتبها" }[c.variant];
     return `${what}. عدّي ${c.rounds} جولات (أول جولة ${c.count}${c.variant === "numbers" ? " أرقام" : " مربعات"})`;
   }
+  if (spec.game === "word") {
+    const total = WORD_PUZZLES[c.p].w.length;
+    return `كوّن ${c.need >= total ? `كل الكلمات (${total})` : `${c.need} كلمات من ${total}`} من الحروف دي قبل ما ${c.time} ثانية يخلصوا`;
+  }
   if (spec.game === "pop") {
     const g = c.goal;
     if (g.type === "score") return `اجمع ${g.n} نقطة في ${c.moves} حركة`;
@@ -77,6 +91,7 @@ function starRule(game) {
   return { speed: "3 نجوم: من غير ولا غلطة · نجمتين: غلطتين بالكتير",
     mem: "النجوم = القلوب اللي فاضلة معاك في الآخر",
     pop: "3 نجوم: يفضل معاك ربع الحركات تقريبًا أو أكتر",
+    word: "3 نجوم: من غير تلميح · نجمتين: تلميح واحد",
     boss: "3 نجوم: من غير ولا غلطة في الأجزاء التلاتة" }[game];
 }
 

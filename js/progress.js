@@ -13,15 +13,15 @@ const Progress = {
     if (!valid) d = this.fresh();
     d.worldsDone = d.worldsDone || {}; d.best = d.best || {};
     // نقل أحسن نتايج اللعب الحر من النسخة الأولى
-    for (const g of ["speed", "pop", "mem"]) { const b = store.get("best_" + g, 0); if (b > (d.best[g] || 0)) d.best[g] = b; }
+    for (const g of ["speed", "pop", "mem", "word"]) { const b = store.get("best_" + g, 0); if (b > (d.best[g] || 0)) d.best[g] = b; }
     this.data = d; return d;
   },
   save() { return store.set(this.KEY, this.data); },
-  reset() { this.data = this.fresh(); for (const g of ["speed", "pop", "mem"]) store.set("best_" + g, 0); this.save(); },
+  reset() { this.data = this.fresh(); for (const g of ["speed", "pop", "mem", "word"]) store.set("best_" + g, 0); this.save(); },
 
   rec(n) { return this.data.levels[n] || null; },
   stars(n) { const r = this.rec(n); return r ? r.stars : 0; },
-  isUnlocked(n) { return n === 1 || this.stars(n - 1) > 0; },
+  isUnlocked(n) { if (n === 1 || this.stars(n - 1) > 0) return true; const w = WORLDS.find(x => x.from === n); return !!(w && w.open); }, // أول مستوى في عالم open مفتوح على طول
   totalStars() { return Object.values(this.data.levels).reduce((a, r) => a + (r.stars || 0), 0); },
   completed() { return Object.values(this.data.levels).filter(r => r.stars > 0).length; },
   nextLevel() { for (const L of LEVELS) if (this.stars(L.n) === 0) return L; return LEVELS[LEVELS.length - 1]; },

@@ -293,3 +293,40 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .ach.done b{color:var(--mango)}
 .ach span{font-size:13px;color:var(--fg);line-height:1.5}
 .ach small{font-size:12px;color:var(--muted);font-weight:700;margin-top:auto}
+
+/* ---------- كوّن كلمة ---------- */
+.art-ring{width:70px;height:70px;border-radius:50%;background:var(--panel2);position:relative}
+.art-ring b{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:15px;font-weight:900;transform:translate(-50%,-50%)}
+.art-ring b:nth-child(1){left:50%;top:24%}.art-ring b:nth-child(2){left:26%;top:66%}.art-ring b:nth-child(3){left:74%;top:66%}
+/* المقاسات كلها بوحدات المسرح (cqw/cqh) عشان تقعد جوه الشاشة في أي مقاس. --R = قطر دايرة الحروف */
+.wd{--R:min(74cqw,290px,calc(100cqh - 230px));height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding-top:4px;box-sizing:border-box}
+.wd-slots{display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:7px 12px;max-width:100%;overflow-y:auto;min-height:34px;flex:0 1 auto;padding:2px}
+.wd-word{display:flex;gap:3px;direction:rtl}
+.wd-word i{--b:clamp(20px,6.6cqw,30px);width:var(--b);height:var(--b);border-radius:7px;background:var(--panel2);display:grid;place-items:center;font-style:normal;font-weight:900;font-size:calc(var(--b) * .6);line-height:1}
+.wd-word.got i{background:var(--mint);color:#063a27}
+.wd-word.hinted i{animation:blink .35s 2 alternate}
+.wd-cur{min-height:40px;font-family:var(--display);font-size:32px;line-height:40px;color:var(--fg);text-align:center;letter-spacing:1px;flex-shrink:0}
+.wd-cur.good{color:var(--mint)}
+.wd-cur.bad{color:var(--bad);font-size:22px}
+.wd-cur.dup{color:var(--mango);font-size:22px}
+.wd-ring{position:relative;width:max(170px,var(--R));aspect-ratio:1;border-radius:50%;background:var(--panel);flex-shrink:0;margin-top:auto} /* الحروف والزراير تحت جنب الصباع */
+.wd-l{position:absolute;transform:translate(-50%,-50%);--s:max(46px,calc(max(170px,var(--R)) * .25));width:var(--s);height:var(--s);border-radius:50%;
+  background:var(--fg);color:var(--bg);font-size:calc(var(--s) * .5);font-weight:900;display:grid;place-items:center;line-height:1;
+  box-shadow:0 4px 0 #b9a98f;transition:transform .08s,background .12s;touch-action:manipulation}
+.wd-l.on{background:var(--mango);color:#3d2600;box-shadow:0 4px 0 #9c6b00;transform:translate(-50%,-50%) scale(.92)}
+.wd-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(100%,420px);flex-shrink:0;padding-bottom:4px}
+.wd-tool{min-height:46px;border-radius:14px;background:var(--panel2);font-weight:900;font-size:15px;box-shadow:0 4px 0 #120a20}
+.wd-tool.ok{background:var(--mint);color:#063a27;box-shadow:0 4px 0 #1c7a52}
+.wd-tool:disabled{opacity:.45}
+/* الشاشة بالعرض: الكلمات على جنب، والحروف والزراير على الجنب التاني */
+@container (min-aspect-ratio: 5/4) {
+  .wd{--R:min(38cqw,290px,calc(100cqh - 56px));display:grid;grid-template-columns:1fr auto auto;grid-template-rows:auto 1fr;column-gap:14px;row-gap:4px;align-items:center;justify-items:center}
+  .wd-slots{grid-column:1;grid-row:1/3;align-self:stretch;justify-self:stretch;align-content:center;max-height:100%}
+  .wd-cur{grid-column:2;grid-row:1;min-height:34px;line-height:34px;font-size:28px}
+  .wd-ring{grid-column:2;grid-row:2;margin:0}
+  .wd-tools{grid-column:3;grid-row:1/3;width:auto;grid-template-columns:1fr;align-self:center}
+  .wd-tool{min-width:96px;min-height:44px}
+  .wd-word i{--b:22px}
+  .wd-slots{gap:6px 9px}
+}
+}
