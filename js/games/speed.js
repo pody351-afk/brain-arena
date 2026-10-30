@@ -22,7 +22,8 @@ const SpeedBrain = {
   mult() { return Math.min(5, 1 + Math.floor(this.s.combo / 3)); },
   hud() {
     const s = this.s, m = this.mult();
-    if (this.isLevel()) setInfo(`<span>صح: ${s.correct} / ${this.cfg.goal}</span><span>${m > 1 ? "مضاعف ×" + m : "غلطات: " + s.mistakes}</span>`);
+    if (this.cfg.race) setInfo(`<span>صح: ${s.correct}</span><span>${m > 1 ? "مضاعف ×" + m : "غلطات: " + s.mistakes}</span>`); // ماتش أونلاين: مفيش هدف، أكتر نقط قبل الوقت
+    else if (this.isLevel()) setInfo(`<span>صح: ${s.correct} / ${this.cfg.goal}</span><span>${m > 1 ? "مضاعف ×" + m : "غلطات: " + s.mistakes}</span>`);
     else setInfo(`<span>صح: ${s.correct}</span><span>${m > 1 ? "مضاعف ×" + m : "اجمع 3 صح ورا بعض للمضاعف"}</span>`);
   },
   loop(t) {

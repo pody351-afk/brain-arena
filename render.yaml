@@ -1,0 +1,11 @@
+# إعدادات Render لتشغيل سيرفر اللعب الأونلاين (مجاني). اللعبة نفسها على GitHub Pages.
+services:
+  - type: web
+    name: mal3ab-server
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+    autoDeploy: true

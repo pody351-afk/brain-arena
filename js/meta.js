@@ -76,6 +76,7 @@ const ACHIEVEMENTS = [
   { id: "a_free3", name: "جرّب كله", desc: "العب الألعاب الأربعة في اللعب الحر", xp: 30, have: () => ["speed", "pop", "mem", "word"].filter(g => M_().stats.freeGames[g]).length, need: 4 },
   { id: "a_words100", name: "قاموس ماشي", desc: "لاقي 100 كلمة في «كوّن كلمة»", xp: 150, have: () => M_().stats.words, need: 100 },
   { id: "a_games50", name: "مدمن ملعب", desc: "العب 50 مرة", xp: 150, have: () => M_().stats.plays, need: 50 },
+  { id: "a_online1", name: "كسبت صاحبك", desc: "اكسب أول ماتش أونلاين", xp: 80, have: () => M_().stats.onlineWins || 0, need: 1 },
   { id: "a_quest10", name: "شغّيل", desc: "استلم مكافأة 10 مهام", xp: 100, have: () => M_().stats.questsClaimed, need: 10 },
 ];
 

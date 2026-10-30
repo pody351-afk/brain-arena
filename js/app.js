@@ -5,13 +5,15 @@ Progress.load();
 Meta.load();
 Meta.checkAchievements(); // لو عندك تقدّم قديم يستاهل إنجازات
 
-const SCREENS = ["home", "map", "profile", "settings", "quests"];
+const SCREENS = ["home", "map", "profile", "settings", "quests", "online"];
 const App = {
   tab: "home", current: null, run: null, free: null,
 
   /* ---------- التنقل ---------- */
   show(tab) {
     this.stopGame();
+    if (tab !== "online" && Online.state !== "menu") Online.quit(); // سبت شاشة الأونلاين = خرجت من الأوضة
+    Online.hideVs();
     this.tab = tab;
     for (const id of SCREENS) $("#" + id).hidden = id !== tab;
     ui.play.hidden = true; $("#nav").hidden = false; ui.over.hidden = true;
@@ -329,6 +331,8 @@ const App = {
     }));
   },
 
+  render_online() { Online.render(); },
+
   /* ---------- الإعدادات ---------- */
   render_settings() {
     const row = (key, label, sub) => `<button type="button" class="row-set" role="switch" aria-checked="${!!Settings.data[key]}" data-set="${key}"><span>${label}<small>${sub}</small></span><span class="toggle"></span></button>`;
@@ -348,7 +352,7 @@ const App = {
     });
   }
 };
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 
 /* ---------- ربط الأزرار ---------- */
 document.querySelectorAll(".card[data-g]").forEach(c => c.addEventListener("click", () => App.openGame(c.dataset.g)));
@@ -357,9 +361,12 @@ $("#continueBtn").addEventListener("click", () => App.levelSheet(Progress.nextLe
 $("#homePlayer").addEventListener("click", () => App.show("profile"));
 $("#dailyBtn").addEventListener("click", () => App.dailySheet());
 $("#questsBtn").addEventListener("click", () => App.show("quests"));
+$("#onlineBtn").addEventListener("click", () => App.show("online"));
 $("#achBtn").addEventListener("click", () => { App.show("quests"); const a = $("#achSec"); if (a) a.scrollIntoView({ block: "start" }); });
 document.querySelectorAll("[data-soon]").forEach(b => b.addEventListener("click", () => toast(b.dataset.soon)));
-$("#backBtn").addEventListener("click", () => { const toMap = !!App.run && !App.run.level.daily; App.run = null; App.show(toMap ? "map" : "home"); });
+$("#backBtn").addEventListener("click", () => {
+  if (Online.playing()) { App.stopGame(); document.querySelectorAll(".inter").forEach(e => e.remove()); Online.quit(); App.show("online"); return; }
+  const toMap = !!App.run && !App.run.level.daily; App.run = null; App.show(toMap ? "map" : "home"); });
 $("#homeBtn").addEventListener("click", () => App.show("home"));
 $("#againBtn").addEventListener("click", () => App.openGame(App.free ? App.free.key : "speed"));
 $("#soundBtn").addEventListener("click", () => { Settings.set("sound", !Settings.data.sound); App.renderSound(); ensureAudio(); sfx.blip(); });
@@ -373,4 +380,4 @@ addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheet").hidden
 
 App.show("home");
 // للاختبارات والتطوير
-window.__mal3ab = { GAMES, App, Progress, Meta, ACHIEVEMENTS, LEVELS, WORLDS, PopLogic, openGame: k => App.openGame(k), goHome: () => App.show("home"), get score() { return scoreNow; } };
+window.__mal3ab = { GAMES, App, Progress, Meta, Online, ACHIEVEMENTS, LEVELS, WORLDS, PopLogic, openGame: k => App.openGame(k), goHome: () => App.show("home"), get score() { return scoreNow; } };

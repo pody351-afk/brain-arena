@@ -330,3 +330,41 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
   .wd-slots{gap:6px 9px}
 }
 }
+
+/* ---------- العب مع صاحبك (أونلاين) ---------- */
+.on-label{font-weight:900;font-size:15px;margin-top:4px}
+.on-input{width:100%;box-sizing:border-box;min-height:52px;border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--fg);
+  font:inherit;font-size:18px;font-weight:700;padding:0 14px}
+.on-input:focus{outline:none;border-color:var(--mango)}
+#onCode{text-transform:uppercase;letter-spacing:6px;text-align:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px}
+.on-games{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.on-game{background:var(--panel);border-radius:18px;padding:12px;text-align:start;display:flex;flex-direction:column;gap:4px;border:2px solid transparent}
+.on-game b{font-family:var(--display);font-weight:400;font-size:20px}
+.on-game span{font-size:12px;color:var(--muted);line-height:1.5}
+.on-game.on{border-color:var(--mango)}
+.on-game.on b{color:var(--mango)}
+.on-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;font-weight:700}
+.on-or::before,.on-or::after{content:"";flex:1;height:2px;background:var(--line);border-radius:2px}
+.on-join{display:grid;grid-template-columns:1fr auto;gap:10px}
+.on-join .btn{padding:0 26px}
+.btn:disabled{opacity:.45}
+.note-box.warn{color:var(--mango);border:2px solid var(--mango)}
+.on-code{display:flex;justify-content:center;gap:10px;margin:6px 0}
+.on-code b{width:min(18vw,68px);aspect-ratio:3/4;border-radius:16px;background:var(--panel);display:grid;place-items:center;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(30px,10vw,42px);color:var(--mango);box-shadow:0 5px 0 #120a20}
+.on-wait{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0;font-weight:900;text-align:center}
+.spin{width:34px;height:34px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--mango);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vs{display:flex;justify-content:center;align-items:center;gap:10px;background:var(--panel);border-radius:14px;padding:6px 12px;font-size:14px;font-weight:700;margin-bottom:6px}
+.vs b{font-family:var(--display);font-weight:400;font-size:20px;color:var(--mango);margin-inline-start:4px}
+.vs .sep{color:var(--muted);font-size:12px}
+.vs .op b{color:var(--sky)}
+.vs .op.ahead b{color:var(--coral)}
+.inter .n.cd{font-size:110px}
+.vs-final{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs-final div{background:var(--panel2);border-radius:16px;padding:12px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.vs-final span{font-size:13px;color:var(--muted);font-weight:700}
+.vs-final b{font-family:var(--display);font-weight:400;font-size:38px;line-height:1.1}
+.vs-final .w{outline:2px solid var(--mango)}
+.vs-final .w b{color:var(--mango)}
+@media (prefers-reduced-motion: reduce){.spin{animation-duration:3s}}

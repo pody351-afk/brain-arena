@@ -1,0 +1,13 @@
+{
+  "name": "mal3ab-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "سيرفر اللعب الأونلاين لملعب المخ",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

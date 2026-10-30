@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@500;700;900&display=swap" media="print" onload="this.media='all'">
 <style>[hidden]{display:none!important}</style>
-<link rel="stylesheet" href="css/app.css?v=1.4">
+<link rel="stylesheet" href="css/app.css?v=1.5">
 </head>
 <body>
 
@@ -45,7 +45,7 @@
     <div class="soon-row">
       <button class="soon live" type="button" id="questsBtn">المهام<small id="questsSub"></small></button>
       <button class="soon live" type="button" id="achBtn">الإنجازات<small id="achSub"></small></button>
-      <button class="soon" type="button" data-soon="اللعب مع الأصحاب محتاج خادم أونلاين، وده مرحلة D">العب مع صاحبك<small>قريبًا</small></button>
+      <button class="soon live" type="button" id="onlineBtn">العب مع صاحبك<small>أونلاين بكود</small></button>
     </div>
   </section>
 
@@ -53,6 +53,7 @@
   <section id="profile" class="screen" hidden></section>
   <section id="settings" class="screen" hidden></section>
   <section id="quests" class="screen" hidden></section>
+  <section id="online" class="screen" hidden></section>
 
   <section id="play" hidden>
     <div class="top">
@@ -61,6 +62,7 @@
       <div class="score" id="hudScore">0</div>
     </div>
     <div class="info" id="hudInfo"></div>
+    <div class="vs" id="vs" hidden></div>
     <div class="barwrap" id="barWrap"><div class="bar" id="hudBar"></div></div>
     <div class="stage" id="stage"></div>
   </section>
@@ -94,15 +96,17 @@
 /* لو حصل خطأ يظهر على الشاشة بدل الشاشة السودا (للتشخيص) */
 window.addEventListener("error",function(e){var d=document.getElementById("__err");if(!d){d=document.createElement("pre");d.id="__err";d.style.cssText="position:fixed;inset:auto 8px 8px 8px;z-index:99999;background:#400;color:#fff;padding:10px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;direction:ltr;max-height:40vh;overflow:auto";document.body.appendChild(d);}d.textContent+=(e.message||"error")+" @ "+(e.filename||"").split("/").pop()+":"+(e.lineno||"")+"\n";});
 </script>
-<script src="js/core.js?v=1.4"></script>
-<script src="js/progress.js?v=1.4"></script>
-<script src="js/words.js?v=1.4"></script>
-<script src="js/levels.js?v=1.4"></script>
-<script src="js/meta.js?v=1.4"></script>
-<script src="js/games/speed.js?v=1.4"></script>
-<script src="js/games/pop.js?v=1.4"></script>
-<script src="js/games/mem.js?v=1.4"></script>
-<script src="js/games/word.js?v=1.4"></script>
-<script src="js/app.js?v=1.4"></script>
+<script src="js/config.js?v=1.5"></script>
+<script src="js/core.js?v=1.5"></script>
+<script src="js/progress.js?v=1.5"></script>
+<script src="js/words.js?v=1.5"></script>
+<script src="js/levels.js?v=1.5"></script>
+<script src="js/meta.js?v=1.5"></script>
+<script src="js/games/speed.js?v=1.5"></script>
+<script src="js/games/pop.js?v=1.5"></script>
+<script src="js/games/mem.js?v=1.5"></script>
+<script src="js/games/word.js?v=1.5"></script>
+<script src="js/online.js?v=1.5"></script>
+<script src="js/app.js?v=1.5"></script>
 </body>
 </html>

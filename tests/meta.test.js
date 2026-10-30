@@ -175,7 +175,7 @@ const xp = page => page.evaluate(() => __mal3ab.Progress.data.xp);
   {
     const page = await newPage(browser);
     const n = await page.evaluate(() => __mal3ab.ACHIEVEMENTS.length);
-    check(n === 20 && await page.evaluate(() => new Set(__mal3ab.ACHIEVEMENTS.map(a => a.id)).size) === 20, 'الإنجازات: 20 إنجاز بأسماء مختلفة');
+    check(n === 21 && await page.evaluate(() => new Set(__mal3ab.ACHIEVEMENTS.map(a => a.id)).size) === 21, 'الإنجازات: 21 إنجاز بأسماء مختلفة');
     check(await page.evaluate(() => __mal3ab.Meta.achCount()) === 0, 'الإنجازات: لاعب جديد = 0');
     const x0 = await xp(page);
     await page.evaluate(() => { const { App, LEVELS } = __mal3ab; App.startLevel(LEVELS[0]); App.current.stop(); App.onPartEnd({ game: 'speed', won: true, score: 50, mistakes: 0, correct: 7 }); });
@@ -197,7 +197,7 @@ const xp = page => page.evaluate(() => __mal3ab.Progress.data.xp);
     check(await xp(page) === o.xp, 'الإنجازات: تحديث تاني ما بيزوّدش');
     await page.evaluate(() => __mal3ab.App.show('quests')); await sleep(200);
     const t = await page.innerText('#quests');
-    check(t.includes('6 من 20') && (await page.locator('.ach.done').count()) === 6, 'الإنجازات: الشاشة بتعرض المفتوح والمقفول', t.slice(-200));
+    check(t.includes('6 من 21') && (await page.locator('.ach.done').count()) === 6, 'الإنجازات: الشاشة بتعرض المفتوح والمقفول', t.slice(-200));
     check(!page.errors.length, 'الإنجازات: من غير أخطاء JS', page.errors.join(' | '));
     await page.context().close();
   }
