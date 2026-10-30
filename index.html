@@ -96,7 +96,7 @@
 /* لو حصل خطأ يظهر على الشاشة بدل الشاشة السودا (للتشخيص) */
 window.addEventListener("error",function(e){var d=document.getElementById("__err");if(!d){d=document.createElement("pre");d.id="__err";d.style.cssText="position:fixed;inset:auto 8px 8px 8px;z-index:99999;background:#400;color:#fff;padding:10px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;direction:ltr;max-height:40vh;overflow:auto";document.body.appendChild(d);}d.textContent+=(e.message||"error")+" @ "+(e.filename||"").split("/").pop()+":"+(e.lineno||"")+"\n";});
 </script>
-<script src="js/config.js?v=1.5.1"></script>
+<script src="js/config.js?v=1.5.2"></script>
 <script src="js/core.js?v=1.5"></script>
 <script src="js/progress.js?v=1.5"></script>
 <script src="js/words.js?v=1.5"></script>
@@ -106,7 +106,7 @@ window.addEventListener("error",function(e){var d=document.getElementById("__err
 <script src="js/games/pop.js?v=1.5"></script>
 <script src="js/games/mem.js?v=1.5"></script>
 <script src="js/games/word.js?v=1.5"></script>
-<script src="js/online.js?v=1.5.1"></script>
-<script src="js/app.js?v=1.5"></script>
+<script src="js/online.js?v=1.5.2"></script>
+<script src="js/app.js?v=1.5.2"></script>
 </body>
 </html>

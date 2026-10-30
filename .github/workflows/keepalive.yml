@@ -1,0 +1,11 @@
+# بيبعت نبضة للسيرفر المجاني كل 10 دقايق عشان ما ينامش
+name: keepalive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 60 https://mal3ab-server.onrender.com/ || true

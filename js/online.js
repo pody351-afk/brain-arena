@@ -22,6 +22,15 @@ const Online = {
     if (q && /^wss?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(q)) return q;
     return this.base != null ? this.base : ONLINE_SERVER; // base للاختبارات بس
   },
+  // بيصحّي السيرفر المجاني (بينام لما محدش يلعب) من أول ما اللعبة تتفتح، فالانتظار بيحصل ورا الستار
+  wake() {
+    try {
+      const u = this.serverUrl();
+      if (!u || !/^wss:\/\//.test(u) || this._woke) return;
+      this._woke = true;
+      fetch(u.replace(/^wss:/, "https:"), { mode: "no-cors", cache: "no-store" }).catch(() => {});
+    } catch (e) {}
+  },
   name() { return store.get("name", ""); },
   playing() { return ["countdown", "play", "wait-result"].includes(this.state); },
 

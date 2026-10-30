@@ -352,7 +352,7 @@ const App = {
     });
   }
 };
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.5.2";
 
 /* ---------- ربط الأزرار ---------- */
 document.querySelectorAll(".card[data-g]").forEach(c => c.addEventListener("click", () => App.openGame(c.dataset.g)));
@@ -379,5 +379,6 @@ $("#shareBtn").addEventListener("click", () => {
 addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheet").hidden) App.closeSheet(); });
 
 App.show("home");
+Online.wake();
 // للاختبارات والتطوير
 window.__mal3ab = { GAMES, App, Progress, Meta, Online, ACHIEVEMENTS, LEVELS, WORLDS, PopLogic, openGame: k => App.openGame(k), goHome: () => App.show("home"), get score() { return scoreNow; } };
