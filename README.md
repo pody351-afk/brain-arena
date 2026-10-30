@@ -22,6 +22,8 @@ node tests/levels.test.js     # المستويات والتقدّم والزعم
 node tests/meta.test.js       # التحدي اليومي والمهام والإنجازات (63)
 node tests/word.test.js       # لعبة «كوّن كلمة» وعالم الكلمات (58)
 node tests/online.test.js     # اللعب الأونلاين: سيرفر + لاعبين حقيقيين (50)
+node tests/social.server.test.js   # الأصحاب والترتيب: السيرفر (47)
+node tests/social.ui.test.js       # الأصحاب والترتيب: الواجهة (43)
 node tests/calibrate-pop.js   # أداة: تقترح أهداف مراحل فرقع بالمحاكاة
 ```
 
@@ -31,4 +33,5 @@ node tests/calibrate-pop.js   # أداة: تقترح أهداف مراحل فر�
 ## سيرفر اللعب الأونلاين
 - الكود في `server/` ومن غير مكتبات: `cd server && node server.js` (البورت الافتراضي 8787).
 - للتجربة على الجهاز: افتح اللعبة بـ `?server=ws://localhost:8787` في آخر اللينك.
+- بيانات الأصحاب والترتيب: من غير إعداد بتتحفظ في ملف `server/data.json` (بيتمسح مع كل إعادة تشغيل على Render المجاني). للحفظ الدائم: اعمل قاعدة Upstash Redis مجانية وحط `KV_URL` و`KV_TOKEN` في Environment على Render (مش في الكود).
 - التشغيل على النت: Render بيقرا `render.yaml`. بعد ما يشتغل، حط اللينك (`wss://...onrender.com`) في `js/config.js`.

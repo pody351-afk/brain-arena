@@ -6,6 +6,7 @@
 "use strict";
 const http = require("http");
 const { WebSocketServer } = require("./miniws"); // من غير مكتبات خارجية
+const { createSocial, pickStore } = require("./social");
 
 const PORT = +process.env.PORT || 8787;
 const GAMES = { word: { secs: 90, maxScore: 5000 }, speed: { secs: 45, maxScore: 5000 } }; // لازم يطابق js/online.js
@@ -13,6 +14,9 @@ const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // من غير الحرو�
 const MAX_ROOMS = 2000, ROOM_TTL = 2 * 60 * 60 * 1000;
 const rooms = new Map();
 const stats = { started: Date.now(), matches: 0 };
+const social = createSocial(pickStore());
+const online = new Map(); // id لاعب -> اتصالاته (عشان نبعتله لما حد يضيفه)
+const socialReady = social.load();
 
 const now = () => Date.now();
 const cleanName = n => String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "لاعب";
@@ -46,11 +50,44 @@ function leave(ws) {
   else if (room.state !== "play") { room.state = "wait"; } // اللي فضل يقدر يستنى حد جديد بنفس الكود
 }
 
+function pushMe(id) {
+  const set = online.get(id); if (!set) return;
+  const p = social._db().players[id]; if (!p) return;
+  for (const w of set) send(w, social.me(p));
+}
+async function socialMessage(ws, m) {
+  await socialReady;
+  if (m.t === "s_auth") {
+    const r = social.auth(m);
+    if (r.error) return send(ws, { t: "s_error", code: r.error });
+    ws.pid = r.player.id;
+    if (!online.has(ws.pid)) online.set(ws.pid, new Set());
+    online.get(ws.pid).add(ws);
+    return send(ws, social.me(r.player));
+  }
+  const p = ws.pid && social._db().players[ws.pid];
+  if (!p) return send(ws, { t: "s_error", code: "no_auth" });
+  let r;
+  if (m.t === "s_name") r = social.setName(p, m.name);
+  else if (m.t === "s_add") r = social.addFriend(p, m.code);
+  else if (m.t === "s_accept") r = social.accept(p, m.code);
+  else if (m.t === "s_decline") r = social.decline(p, m.code);
+  else if (m.t === "s_remove") r = social.remove(p, m.code);
+  else if (m.t === "s_submit") r = social.submit(p, m.game, m.score);
+  else if (m.t === "s_board") r = social.board(p, m.game, m.scope);
+  else if (m.t === "s_me") r = { reply: social.me(p) };
+  else return;
+  if (r.error) return send(ws, { t: "s_error", code: r.error });
+  send(ws, r.reply);
+  (r.notify || []).forEach(pushMe);
+}
+
 function onMessage(ws, raw) {
   // حماية بسيطة من الرسايل الكتير: 30 رسالة في الثانية بالكتير
   const t = now(); if (t - ws.win > 1000) { ws.win = t; ws.count = 0; } if (++ws.count > 30) return;
   let m; try { m = JSON.parse(raw); } catch (e) { return; }
   if (!m || typeof m.t !== "string") return;
+  if (m.t.startsWith("s_")) return socialMessage(ws, m);
   const room = ws.room;
 
   if (m.t === "create") {
@@ -104,14 +141,14 @@ function onMessage(ws, raw) {
 const server = http.createServer((req, res) => {
   // صفحة صغيرة للتأكد إن السيرفر شغال (وRender بيستخدمها)
   res.writeHead(200, { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" });
-  res.end(JSON.stringify({ ok: true, name: "mal3ab-server", rooms: rooms.size, matches: stats.matches, upMinutes: Math.round((now() - stats.started) / 60000) }));
+  res.end(JSON.stringify({ ok: true, name: "mal3ab-server", rooms: rooms.size, matches: stats.matches, players: social.playersCount, store: social.storeKind, storeError: social.lastError || undefined, upMinutes: Math.round((now() - stats.started) / 60000) }));
 });
 const wss = new WebSocketServer({ server, maxPayload: 1024 });
 wss.on("connection", ws => {
   ws.alive = true; ws.win = now(); ws.count = 0; ws.room = null;
   ws.on("pong", () => { ws.alive = true; });
   ws.on("message", raw => onMessage(ws, raw));
-  ws.on("close", () => leave(ws));
+  ws.on("close", () => { leave(ws); if (ws.pid) { const s = online.get(ws.pid); if (s) { s.delete(ws); if (!s.size) online.delete(ws.pid); } } });
   ws.on("error", () => {});
   send(ws, { t: "hello" });
 });
@@ -123,4 +160,6 @@ const beat = setInterval(() => {
 wss.on("close", () => clearInterval(beat));
 
 if (require.main === module) server.listen(PORT, () => console.log("mal3ab-server on :" + PORT));
-module.exports = { server, wss, rooms, GAMES };
+// نحفظ البيانات قبل ما السيرفر يقفل
+for (const sig of ["SIGTERM", "SIGINT"]) process.on(sig, async () => { try { await social.flush(); } catch (e) {} process.exit(0); });
+module.exports = { server, wss, rooms, GAMES, get social() { return social; } };

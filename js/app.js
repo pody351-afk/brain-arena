@@ -5,7 +5,7 @@ Progress.load();
 Meta.load();
 Meta.checkAchievements(); // لو عندك تقدّم قديم يستاهل إنجازات
 
-const SCREENS = ["home", "map", "profile", "settings", "quests", "online"];
+const SCREENS = ["home", "map", "profile", "settings", "quests", "online", "social"];
 const App = {
   tab: "home", current: null, run: null, free: null,
 
@@ -14,6 +14,7 @@ const App = {
     this.stopGame();
     if (tab !== "online" && Online.state !== "menu") Online.quit(); // سبت شاشة الأونلاين = خرجت من الأوضة
     Online.hideVs();
+    if (this.tab === "social" && tab !== "social") Social.leaveScreen();
     this.tab = tab;
     for (const id of SCREENS) $("#" + id).hidden = id !== tab;
     ui.play.hidden = true; $("#nav").hidden = false; ui.over.hidden = true;
@@ -270,6 +271,7 @@ const App = {
     this.current = null;
     const best = Progress.saveBest(g.key, r.score), isNew = r.score > best;
     Meta.track({ mode: "free", results: [r], won: false });
+    Social.submit(g.key, r.score); // لو اللاعب منضم للترتيب بس
     $("#overScore").textContent = r.score;
     $("#overRank").textContent = g.rank(r.score);
     const b = $("#overBest");
@@ -332,6 +334,7 @@ const App = {
   },
 
   render_online() { Online.render(); },
+  render_social() { Social.open(); },
 
   /* ---------- الإعدادات ---------- */
   render_settings() {
@@ -352,7 +355,7 @@ const App = {
     });
   }
 };
-const APP_VERSION = "1.5.2";
+const APP_VERSION = "1.6";
 
 /* ---------- ربط الأزرار ---------- */
 document.querySelectorAll(".card[data-g]").forEach(c => c.addEventListener("click", () => App.openGame(c.dataset.g)));
@@ -362,6 +365,7 @@ $("#homePlayer").addEventListener("click", () => App.show("profile"));
 $("#dailyBtn").addEventListener("click", () => App.dailySheet());
 $("#questsBtn").addEventListener("click", () => App.show("quests"));
 $("#onlineBtn").addEventListener("click", () => App.show("online"));
+$("#socialBtn").addEventListener("click", () => App.show("social"));
 $("#achBtn").addEventListener("click", () => { App.show("quests"); const a = $("#achSec"); if (a) a.scrollIntoView({ block: "start" }); });
 document.querySelectorAll("[data-soon]").forEach(b => b.addEventListener("click", () => toast(b.dataset.soon)));
 $("#backBtn").addEventListener("click", () => {
@@ -381,4 +385,4 @@ addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheet").hidden
 App.show("home");
 Online.wake();
 // للاختبارات والتطوير
-window.__mal3ab = { GAMES, App, Progress, Meta, Online, ACHIEVEMENTS, LEVELS, WORLDS, PopLogic, openGame: k => App.openGame(k), goHome: () => App.show("home"), get score() { return scoreNow; } };
+window.__mal3ab = { GAMES, App, Progress, Meta, Online, Social, ACHIEVEMENTS, LEVELS, WORLDS, PopLogic, openGame: k => App.openGame(k), goHome: () => App.show("home"), get score() { return scoreNow; } };
