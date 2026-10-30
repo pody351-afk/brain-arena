@@ -256,3 +256,40 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .inter .k{font-weight:900;color:var(--mango);font-size:16px}
 .inter .n{font-family:var(--display);font-size:56px;line-height:1.1}
 .inter .d{color:var(--muted);font-size:16px;font-weight:700;max-width:320px;line-height:1.6}
+
+/* ---------- المرحلة C: التحدي اليومي، المهام، الإنجازات ---------- */
+.daily-card{display:flex;align-items:center;gap:12px;text-align:start;background:linear-gradient(135deg,#1f5c4a,#2a1d45 75%);
+  border:2px solid var(--mint);border-radius:22px;padding:14px 16px;box-shadow:0 5px 0 #0d3328}
+.daily-card.done{border-color:var(--line);background:var(--panel);box-shadow:0 5px 0 #120a20}
+.dc-main{flex:1;min-width:0}
+.dc-k{font-size:13px;font-weight:900;color:var(--mint)}
+.dc-t{font-family:var(--display);font-size:28px;line-height:1.15}
+.dc-s{font-size:13px;color:var(--muted);font-weight:700;line-height:1.5}
+.dc-s .star{width:13px;height:13px;vertical-align:-2px}
+.dc-streak{display:grid;place-items:center;min-width:64px;background:rgba(0,0,0,.25);border-radius:16px;padding:8px 6px;text-align:center}
+.dc-streak b{font-family:var(--display);font-weight:400;font-size:32px;color:var(--mango);line-height:1}
+.dc-streak span{font-size:11px;font-weight:700;color:var(--muted);line-height:1.3}
+.soon.live small{color:var(--mint)}
+.soon.has{outline:2px solid var(--mango);outline-offset:-2px}
+.soon.has small{color:var(--mango)}
+.q-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px}
+.q-head h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.q-head span{font-size:13px;color:var(--muted);font-weight:700}
+.quest{display:flex;align-items:center;gap:12px;background:var(--panel);border-radius:18px;padding:12px 14px}
+.quest.ready{outline:2px solid var(--mango);outline-offset:-2px}
+.quest.claimed{opacity:.6}
+.q-body{flex:1;min-width:0}
+.q-t{font-weight:900;font-size:15px;line-height:1.5}
+.q-bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.q-bar i{display:block;height:100%;background:var(--mint);transform-origin:right;border-radius:99px}
+.q-n{font-size:12px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.q-xp,.q-done{font-size:13px;font-weight:900;color:var(--muted);white-space:nowrap}
+.q-done{color:var(--mint)}
+.q-claim{background:var(--mango);color:#3d2600;border-radius:14px;padding:8px 12px;font-weight:900;font-size:14px;line-height:1.3;box-shadow:0 4px 0 #9c6b00;min-height:48px}
+.ach-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ach{background:var(--panel);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:4px;opacity:.7}
+.ach.done{opacity:1;outline:2px solid var(--mango);outline-offset:-2px}
+.ach b{font-family:var(--display);font-weight:400;font-size:20px;line-height:1.2}
+.ach.done b{color:var(--mango)}
+.ach span{font-size:13px;color:var(--fg);line-height:1.5}
+.ach small{font-size:12px;color:var(--muted);font-weight:700;margin-top:auto}

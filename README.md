@@ -19,6 +19,7 @@
 npm i playwright
 node tests/test.js            # اللعب الحر والشاشات (57)
 node tests/levels.test.js     # المستويات والتقدّم والزعماء وقابلية الحل (53)
+node tests/meta.test.js       # التحدي اليومي والمهام والإنجازات (63)
 node tests/calibrate-pop.js   # أداة: تقترح أهداف مراحل فرقع بالمحاكاة
 ```
 

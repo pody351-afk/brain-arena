@@ -172,7 +172,8 @@ async function testProgressFlow(browser) {
   for (let i = 0; i < 12; i++) { const done = await page.evaluate(() => !__mal3ab.GAMES.speed.s.alive); if (done) break; await answerRight(page); await page.waitForFunction(() => !__mal3ab.GAMES.speed.s.lock || !__mal3ab.GAMES.speed.s.alive, null, { timeout: 2000 }).catch(() => {}); }
   await page.waitForSelector('#sheet:not([hidden]) .stars-big', { timeout: 4000 }).catch(() => {});
   s = await st();
-  const L1 = await page.evaluate(() => { const L = __mal3ab.LEVELS[0]; return L.xpStar * 3 + L.xpFirst; });
+  // + 20 XP من إنجاز "أول خطوة" (المرحلة C) اللي بيتفتح مع أول فوز
+  const L1 = await page.evaluate(() => { const L = __mal3ab.LEVELS[0]; return L.xpStar * 3 + L.xpFirst + __mal3ab.ACHIEVEMENTS.find(a => a.id === 'a_first').xp; });
   check(s.s1 === 3 && s.xp === L1 && s.open2, `مستوى 1: 3 نجوم من غير غلط، +${L1} XP، ومستوى 2 اتفتح`, JSON.stringify(s));
   await page.screenshot({ path: path.join(OUT, 'b-result-win.png') });
   // إعادة نفس المستوى بنفس النجوم = صفر XP

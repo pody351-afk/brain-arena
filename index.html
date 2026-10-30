@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@500;700;900&display=swap" media="print" onload="this.media='all'">
 <style>[hidden]{display:none!important}</style>
-<link rel="stylesheet" href="css/app.css?v=1.2.1">
+<link rel="stylesheet" href="css/app.css?v=1.3">
 </head>
 <body>
 
@@ -22,6 +22,7 @@
     </div>
     <button class="chip-player" id="homePlayer" type="button" aria-label="ملفي"></button>
     <button class="continue" id="continueBtn" type="button"></button>
+    <button class="daily-card" id="dailyBtn" type="button"></button>
 
     <h2 class="h2">لعب حر</h2>
     <button class="card" data-g="speed" type="button">
@@ -38,8 +39,8 @@
     </button>
 
     <div class="soon-row">
-      <button class="soon" type="button" data-soon="التحدي اليومي جاي في المرحلة الجاية">التحدي اليومي<small>قريبًا</small></button>
-      <button class="soon" type="button" data-soon="الإنجازات جاية في المرحلة الجاية">الإنجازات<small>قريبًا</small></button>
+      <button class="soon live" type="button" id="questsBtn">المهام<small id="questsSub"></small></button>
+      <button class="soon live" type="button" id="achBtn">الإنجازات<small id="achSub"></small></button>
       <button class="soon" type="button" data-soon="اللعب مع الأصحاب محتاج خادم أونلاين، وده مرحلة D">العب مع صاحبك<small>قريبًا</small></button>
     </div>
   </section>
@@ -47,6 +48,7 @@
   <section id="map" class="screen" hidden></section>
   <section id="profile" class="screen" hidden></section>
   <section id="settings" class="screen" hidden></section>
+  <section id="quests" class="screen" hidden></section>
 
   <section id="play" hidden>
     <div class="top">
@@ -88,12 +90,13 @@
 /* لو حصل خطأ يظهر على الشاشة بدل الشاشة السودا (للتشخيص) */
 window.addEventListener("error",function(e){var d=document.getElementById("__err");if(!d){d=document.createElement("pre");d.id="__err";d.style.cssText="position:fixed;inset:auto 8px 8px 8px;z-index:99999;background:#400;color:#fff;padding:10px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;direction:ltr;max-height:40vh;overflow:auto";document.body.appendChild(d);}d.textContent+=(e.message||"error")+" @ "+(e.filename||"").split("/").pop()+":"+(e.lineno||"")+"\n";});
 </script>
-<script src="js/core.js?v=1.2.1"></script>
-<script src="js/progress.js?v=1.2.1"></script>
-<script src="js/levels.js?v=1.2.1"></script>
-<script src="js/games/speed.js?v=1.2.1"></script>
-<script src="js/games/pop.js?v=1.2.1"></script>
-<script src="js/games/mem.js?v=1.2.1"></script>
-<script src="js/app.js?v=1.2.1"></script>
+<script src="js/core.js?v=1.3"></script>
+<script src="js/progress.js?v=1.3"></script>
+<script src="js/levels.js?v=1.3"></script>
+<script src="js/meta.js?v=1.3"></script>
+<script src="js/games/speed.js?v=1.3"></script>
+<script src="js/games/pop.js?v=1.3"></script>
+<script src="js/games/mem.js?v=1.3"></script>
+<script src="js/app.js?v=1.3"></script>
 </body>
 </html>

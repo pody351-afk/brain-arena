@@ -61,6 +61,12 @@ const Progress = {
     this.save();
     return out;
   },
+  // XP من برّه المستويات (التحدي اليومي، المهام، الإنجازات). اللي بينادي عليها مسؤول إنها تتنادى مرة واحدة لكل مكافأة.
+  addXp(n) {
+    const from = this.playerLevel();
+    n = Math.max(0, n | 0); this.data.xp += n; this.save();
+    return { from, to: this.playerLevel() };
+  },
   saveBest(game, score) {
     const old = this.data.best[game] || 0;
     if (score > old) { this.data.best[game] = score; store.set("best_" + game, score); this.save(); }
