@@ -89,10 +89,11 @@ async function joinRoom(p, code) { await openOnline(p); await p.fill('#onCode', 
   {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } }); await ctx.route(/fonts\./, r => r.abort());
     const p = await ctx.newPage(); await p.goto('file://' + path.join(ROOT, 'index.html')); await sleep(250);
+    await p.evaluate(() => { __mal3ab.Online.base = ''; }); // نمثّل نسخة من غير سيرفر
     await p.tap('#onlineBtn').catch(() => p.click('#onlineBtn')); await sleep(150);
     check((await p.innerText('#online')).includes('لسه ما اشتغلش') && await p.locator('#onCreate').isDisabled() && await p.locator('#onJoin').isDisabled(), 'من غير سيرفر: رسالة واضحة والزراير مقفولة');
-    const bad = await p.evaluate(() => { history.replaceState(null, '', location.pathname + '?server=wss://evil.example.com'); return __mal3ab.Online.serverUrl(); });
-    check(bad === '', 'الأمان: ?server= بيقبل localhost بس');
+    const bad = await p.evaluate(() => { __mal3ab.Online.base = null; history.replaceState(null, '', location.pathname + '?server=wss://evil.example.com'); return __mal3ab.Online.serverUrl(); });
+    check(bad === 'wss://mal3ab-server.onrender.com', 'الأمان: ?server= بيقبل localhost بس، وغير كده بيستخدم سيرفرنا', bad);
     await ctx.close();
   }
 

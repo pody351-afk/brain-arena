@@ -20,7 +20,7 @@ const Online = {
     // ?server= للتجربة على الجهاز بس (localhost)، عشان محدش يبعتلك لينك يوصّلك بسيرفر غريب
     const q = new URLSearchParams(location.search).get("server");
     if (q && /^wss?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(q)) return q;
-    return ONLINE_SERVER;
+    return this.base != null ? this.base : ONLINE_SERVER; // base للاختبارات بس
   },
   name() { return store.get("name", ""); },
   playing() { return ["countdown", "play", "wait-result"].includes(this.state); },
