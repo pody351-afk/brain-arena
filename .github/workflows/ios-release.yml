@@ -1,11 +1,8 @@
 # رفع التطبيق لـ TestFlight / App Store Connect. بيشتغل يدوي بس (من تبويب Actions ← Run workflow).
-# محتاج 5 أسرار في Settings ← Secrets and variables ← Actions (مش في الكود أبدًا):
-#   APPLE_TEAM_ID      رقم الفريق (10 حروف) من حساب Apple Developer
-#   ASC_KEY_ID         رقم مفتاح App Store Connect API
-#   ASC_ISSUER_ID      رقم الـ Issuer
-#   ASC_KEY_P8         محتوى ملف AuthKey_XXXX.p8 كامل
-#   BUNDLE_ID          اختياري، الافتراضي com.emsekharamy.brainarena (لازم يطابق اللي سجّلته عند Apple)
-# المفتاح لازم يكون بصلاحية Admin عشان Xcode يعمل الشهادات لوحده (signing تلقائي مُدار من Apple).
+# محتاج 4 أسرار في Settings ← Secrets and variables ← Actions (مش في الكود أبدًا):
+#   APPLE_TEAM_ID · ASC_KEY_ID · ASC_ISSUER_ID · ASC_KEY_P8 (محتوى ملف .p8 كامل)
+#   BUNDLE_ID اختياري، الافتراضي com.emsekharamy.brainarena
+# التوقيع بيتعمل بـ fastlane من خلال App Store Connect API (fastlane/Fastfile).
 name: ios-release
 on:
   workflow_dispatch:
@@ -19,14 +16,15 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 60
     env:
-      TEAM: ${{ secrets.APPLE_TEAM_ID }}
-      KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
     steps:
       - name: Check secrets
         run: |
-          for v in TEAM KEY_ID ISSUER; do [ -n "${!v}" ] || { echo "سر ناقص: $v"; exit 1; }; done
-          [ -n "${{ secrets.ASC_KEY_P8 }}" ] || { echo "سر ناقص: ASC_KEY_P8"; exit 1; }
+          for v in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do [ -n "${!v}" ] || { echo "سر ناقص: $v"; exit 1; }; done
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
@@ -34,36 +32,8 @@ jobs:
       - name: Set bundle id
         run: |
           BID="${{ secrets.BUNDLE_ID }}"; [ -n "$BID" ] || BID="com.emsekharamy.brainarena"
+          echo "BUNDLE_ID=$BID" >> "$GITHUB_ENV"
           node -e "const f='capacitor.config.json',c=require('./'+f);c.appId='$BID';require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
       - run: npm run ios:add
-      - name: Write API key
-        run: |
-          mkdir -p ~/private_keys
-          printf '%s' "${{ secrets.ASC_KEY_P8 }}" > ~/private_keys/AuthKey_${KEY_ID}.p8
-      - name: Archive
-        run: |
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
-            DEVELOPMENT_TEAM="$TEAM" CURRENT_PROJECT_VERSION="${{ inputs.build_number }}" MARKETING_VERSION=1.6 \
-            -allowProvisioningUpdates -authenticationKeyPath ~/private_keys/AuthKey_${KEY_ID}.p8 \
-            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" archive | tail -30
-      - name: Export IPA
-        run: |
-          cat > build/export.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>method</key><string>app-store-connect</string>
-            <key>teamID</key><string>${TEAM}</string>
-            <key>signingStyle</key><string>automatic</string>
-            <key>destination</key><string>export</string>
-          </dict></plist>
-          EOF
-          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportOptionsPlist build/export.plist -exportPath build/ipa \
-            -allowProvisioningUpdates -authenticationKeyPath ~/private_keys/AuthKey_${KEY_ID}.p8 \
-            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" | tail -20
-      - name: Upload to App Store Connect (TestFlight)
-        run: xcrun altool --upload-app -f build/ipa/*.ipa -t ios --apiKey "$KEY_ID" --apiIssuer "$ISSUER"
-      - name: Remove key
-        if: always()
-        run: rm -rf ~/private_keys
+      - name: Build and upload (fastlane)
+        run: fastlane ios release
