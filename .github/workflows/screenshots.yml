@@ -1,0 +1,17 @@
+# بيطلّع لقطات المتجر بالخطوط الحقيقية (Cairo وLalezar من Google Fonts) ويحطها في appstore/screenshots.
+name: screenshots
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-save --no-audit --no-fund playwright && npx playwright install --with-deps chromium
+      - run: node scripts/store-screenshots.js
+      - run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add appstore/screenshots && git commit -m "لقطات المتجر بالخطوط الحقيقية" && git push || echo "مفيش تغيير"

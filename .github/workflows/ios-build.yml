@@ -1,0 +1,23 @@
+# بيبني تطبيق iOS على سيرفر macOS مجاني (المستودع عام) من غير أي حساب Apple، عشان نتأكد إن الغلاف بيتبني.
+# الناتج نسخة للمحاكي (مش للمتجر). النسخة الحقيقية: ios-release.yml.
+name: ios-build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["capacitor.config.json", "package.json", "scripts/**", "assets/**", ".github/workflows/ios-build.yml", "js/**", "css/**", "index.html"]
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-audit --no-fund
+      - run: npm run ios:add
+      - name: Build for simulator (no signing)
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -30

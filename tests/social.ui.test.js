@@ -28,6 +28,7 @@ const openSocial = async p => { if (!(await p.locator('#home').isVisible())) { a
 const overflow = p => p.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
 const myCode = p => p.evaluate(() => __mal3ab.Social.me && __mal3ab.Social.me.code);
 
+let errsExtra = [];
 (async () => {
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   PORT = server.address().port; SRV = `ws://127.0.0.1:${PORT}`;
@@ -111,6 +112,35 @@ const myCode = p => p.evaluate(() => __mal3ab.Social.me && __mal3ab.Social.me.co
   await A.locator('[data-tab="friends"]').tap();
   check(await until(() => A.locator('.sc-friends li').count().then(n => n === 0)), 'وأحمد اتشال عنده لايف');
 
+  /* ---------- مطالب Apple: اسم مسيء، بلاغ، حذف حساب ---------- */
+  {
+    const F = await player(browser, 'شرموط');
+    await openSocial(F); await F.tap('#scJoin');
+    check(await until(() => F.toasts.some(t => /الاسم ده مش مناسب/.test(t)), 5000) && await F.evaluate(() => store.get('social_on') === false), 'اسم مسيء: رسالة والانضمام ما بيتمش');
+    await F.fill('#scName', 'فريد'); await F.tap('#scJoin'); await until(() => F.locator('#scCode').isVisible());
+    const G = await player(browser, 'جمال');
+    await openSocial(G); await G.tap('#scJoin'); await until(() => G.locator('#scCode').isVisible());
+    await F.evaluate(() => __mal3ab.Social.submit('speed', 50)); await G.evaluate(() => __mal3ab.Social.submit('speed', 60));
+    await sleep(400);
+    await G.locator('[data-sg="speed"]').tap();
+    check(await until(async () => (await G.locator('.sc-list li').count()) === 3), 'ثلاث لاعبين في ترتيب أسرع مخ');
+    check(await G.locator('.sc-list li.me .sc-flag').count() === 0 && await G.locator('.sc-list li:not(.me) .sc-flag').count() === 2, 'زرار البلاغ على صفوف التانيين بس');
+    G.on('dialog', d => d.accept()); F.on('dialog', d => d.accept());
+    await G.tap('.sc-flag');
+    check(await until(() => G.toasts.some(t => /اختفى من عندك/.test(t)), 4000), 'رسالة تأكيد البلاغ');
+    check(await until(async () => (await G.locator('.sc-list li').count()) === 2), 'اللاعب المبلّغ عنه اختفى من ترتيبي');
+    await F.locator('[data-sg="speed"]').tap();
+    check(await until(async () => (await F.locator('.sc-list li').count()) === 2), 'الحظر من الجهتين: هو كمان ما بيشوفنيش');
+    await F.locator('[data-tab="friends"]').tap();
+    check(await F.locator('#scDelete').isVisible() && /بلّغ عن لاعب/.test(await F.locator('#social').innerText()), 'زرار حذف الحساب وشرح البلاغ ظاهرين');
+    const before = (await health()).players;
+    await F.tap('#scDelete');
+    check(await until(async () => (await health()).players === before - 1), 'حذف الحساب مسح اللاعب من السيرفر');
+    check(await until(() => F.locator('#scJoin').isVisible()) && await F.evaluate(() => store.get('social_on') === false && store.get('psecret') === ''), 'والجهاز رجع لشاشة الانضمام ومسح الهوية');
+    check(await G.evaluate(() => 1) && await until(async () => { await G.evaluate(() => __mal3ab.Social.send({ t: 's_board', game: 'speed', scope: 'all' })); await sleep(150); return (await G.locator('.sc-list li').count()) === 2; }), 'الترتيب عند الباقيين متحدّث');
+    errsExtra = [F, G];
+  }
+
   /* ---------- مقاسات وإتاحة ---------- */
   for (const vp of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 900, height: 700 }]) {
     await A.setViewportSize(vp); await sleep(150);
@@ -144,7 +174,7 @@ const myCode = p => p.evaluate(() => __mal3ab.Social.me && __mal3ab.Social.me.co
   await openSocial(E); await E.tap('#scJoin');
   check(await until(() => E.toasts.some(t => /مش قادرين نوصل/.test(t)), 8000) && await E.evaluate(() => store.get('social_on') === false), 'السيرفر مش متاح: رسالة والانضمام ما بيتسجلش');
 
-  const errs = [A, B, C, D, E].flatMap(p => p.errors);
+  const errs = [A, B, C, D, E, ...errsExtra].flatMap(p => p.errors);
   check(errs.length === 0, 'مفيش أخطاء جافاسكربت', errs.join('|'));
 
   await browser.close(); server.close();

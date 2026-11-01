@@ -74,6 +74,30 @@ const reg = (soc, name) => { const id = hex(16), secret = hex(32); const r = soc
   let busy = 0; for (let i = 0; i < 130; i++) if (soc.auth({ id: hex(16), secret: hex(32) }).error === "busy_reg") busy++;
   check(busy > 0, "حد أقصى لعدد الحسابات الجديدة في الوقت الواحد");
 
+  /* ---------- مطالب Apple: فلتر الأسماء، البلاغ/الحظر، حذف الحساب ---------- */
+  check(["شرموط", "يا عــــرص", "FUCK you", "f.u.c.k", "كــس امك", "Hitler"].every(n => soc.isBadName(n)), "فلتر الأسماء بيمسك الشتايم الشائعة (حتى بالتطويل والرموز)");
+  check(!["أحمد", "كسبان", "سلمى", "Assem", "زبيدة", "Mona"].some(n => soc.isBadName(n)), "الأسماء العادية اللي فيها حروف شبه الشتايم بتعدّي");
+  check(soc.auth({ id: hex(16), secret: hex(32), name: "شرموط" }).error === "bad_name", "تسجيل باسم مسيء = رفض");
+  check(soc.setName(a.p, "عرص").error === "bad_name" && a.p.name !== "عرص", "تغيير الاسم لاسم مسيء = رفض");
+  T += 3600e3; // نعدّي حد التسجيل المؤقت
+  const d1 = reg(soc, "ديما"), d2 = reg(soc, "دياب"), d3 = reg(soc, "داليا"), d4 = reg(soc, "داود");
+  soc.submit(d1.p, "pop", 300); soc.submit(d2.p, "pop", 200); soc.addFriend(d2.p, d1.p.code); soc.accept(d1.p, d2.p.code);
+  check(soc.board(d3.p, "pop", "all").reply.list.some(r => r.code === d1.p.code), "اللوحة بتعرض كود الصاحب للاعبين التانيين (مش كودي أنا)");
+  check(soc.board(d1.p, "pop", "all").reply.list.find(r => r.me).code === null, "صفّي ما فيهوش كود");
+  r = soc.report(d1.p, d2.p.code);
+  check(r.reply.ok === "reported" && soc.me(d1.p).friends.length === 0 && soc.me(d2.p).friends.length === 0, "البلاغ بيشيل الصداقة من الجهتين");
+  check(!soc.board(d1.p, "pop", "all").reply.list.some(r => r.name === "دياب") && soc.board(d3.p, "pop", "all").reply.list.some(r => r.name === "دياب"), "اللي بلّغت عنه بيختفي عندي بس");
+  check(soc.addFriend(d1.p, d2.p.code).error === "no_player" && soc.addFriend(d2.p, d1.p.code).error === "no_player", "ما ينفعش حد يضيف التاني بعد البلاغ");
+  soc.report(d3.p, d2.p.code); soc.report(d4.p, d2.p.code);
+  check(!soc.board(reg(soc, "غادة").p, "pop", "all").reply.list.some(r => r.name === "دياب"), "3 بلاغات من ناس مختلفة = بيختفي من الكل");
+  check(soc.report(d1.p, "ZZZZZZ").error === "no_player" && soc.report(d1.p, d1.p.code).error === "no_player", "بلاغ عن كود غلط أو عن نفسي = رفض");
+  soc.addFriend(d3.p, d1.p.code); soc.accept(d1.p, d3.p.code); soc.addFriend(d4.p, d1.p.code);
+  const oldCode = d1.p.code; r = soc.deleteAccount(d1.p);
+  check(!soc._db().players[d1.id] && r.notify.includes(d3.id), "حذف الحساب بيمسح اللاعب وبيبلّغ أصحابه");
+  check(soc.me(d3.p).friends.length === 0 && soc.me(d4.p).incoming.length === 0 && soc.addFriend(d4.p, oldCode).error === "no_player", "وبيتشال من الأصحاب والطلبات والكود بيتلغي");
+  check(!JSON.stringify(soc._db()).includes(d1.id) && !JSON.stringify(soc._db()).includes(oldCode), "مفيش أي أثر للحساب المحذوف في البيانات");
+  check(soc.board(a.p, "pop", "all").reply.list.every(x => x.name !== "ديما"), "ومش في الترتيب");
+
   /* ---------- التخزين ---------- */
   await soc.flush();
   const soc2 = mk(store, () => T); await soc2.load();
@@ -132,6 +156,12 @@ const reg = (soc, name) => { const id = hex(16), secret = hex(32); const r = soc
   check((await next(w3, "s_error")).code === "bad_auth", "WS: سر غلط لحساب موجود = رفض");
   const health = await fetch("http://127.0.0.1:" + port + "/").then(r => r.json());
   check(health.players >= 2 && health.store === "file" && !JSON.stringify(health).includes(u1.id), "صفحة الصحة بتعرض العدد من غير بيانات خاصة");
+  w1.send(JSON.stringify({ t: "s_delete" }));
+  check(!!(await next(w1, "deleted")), "WS: حذف الحساب");
+  w1.send(JSON.stringify({ t: "s_board", game: "speed", scope: "all" }));
+  check((await next(w1, "s_error")).code === "no_auth", "WS: بعد الحذف الاتصال مبقاش مسجّل");
+  const push4 = await next(w2, "me");
+  check(push4 && push4.friends.length === 0, "WS: سلمى بتشوف إن علي اتشال من أصحابها");
   [w1, w2, w3].forEach(w => w.close());
   await sleep(100);
   server.close();

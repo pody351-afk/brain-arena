@@ -8,7 +8,7 @@ const SOCIAL_SCOPES = { all: "الكل", week: "الأسبوع ده", friends: "
 const SOCIAL_ERRORS = {
   no_player: "مفيش لاعب بالكود ده. اتأكد من الكود.", self: "ده كودك انت 🙂", already: "انتو أصحاب بالفعل.", pending: "الطلب اتبعت قبل كده.",
   too_many: "وصلت للحد الأقصى من الأصحاب.", busy: "اللاعب ده عنده طلبات كتير دلوقتي.", no_request: "الطلب ده مبقاش موجود.",
-  bad_auth: "الحساب ده مش مطابق لجهازك. لو مسحت بيانات المتصفح الحساب القديم بيضيع.", full: "السيرفر وصل للحد الأقصى من اللاعبين.", busy_reg: "في زحمة تسجيل دلوقتي. جرّب كمان شوية.",
+  bad_auth: "الحساب ده مش مطابق لجهازك. لو مسحت بيانات المتصفح الحساب القديم بيضيع.", full: "السيرفر وصل للحد الأقصى من اللاعبين.", busy_reg: "في زحمة تسجيل دلوقتي. جرّب كمان شوية.", bad_name: "الاسم ده مش مناسب. اختار اسم تاني.",
 };
 
 const Social = {
@@ -55,7 +55,11 @@ const Social = {
     if (m.t === "me") {
       this.me = m;
       if (m.ok === "sent") toast("الطلب اتبعت!");
+      if (m.ok === "reported") { toast("تم. اللاعب ده اختفى من عندك وهنراجع البلاغ."); this.board = null; this.refreshBoard(); }
       if (App.tab === "social") this.render();
+    } else if (m.t === "deleted") {
+      for (const k of ["social_on", "pid", "psecret"]) store.set(k, k === "social_on" ? false : "");
+      this.close(); this.me = null; this.board = null; toast("اتمسح حسابك وكل بياناتك من السيرفر"); if (App.tab === "social") this.render();
     } else if (m.t === "board") {
       this.board = m; this.loading = false; if (App.tab === "social") this.render();
     } else if (m.t === "s_error") {
@@ -129,6 +133,7 @@ const Social = {
       ${this.tab === "board" ? this.boardHtml() : this.friendsHtml()}`;
     $("#scCode").addEventListener("click", () => this.shareCode());
     box.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { this.tab = b.dataset.tab; sfx.blip(); this.render(); }));
+    box.querySelectorAll("[data-rp]").forEach(b => b.addEventListener("click", () => { if (confirm("تبلّغ عن " + b.dataset.nm + " وتخفيه من عندك؟")) this.send({ t: "s_report", code: b.dataset.rp }); }));
     if (this.tab === "board") {
       box.querySelectorAll("[data-sg]").forEach(b => b.addEventListener("click", () => { this.game = b.dataset.sg; this.board = null; sfx.blip(); this.refreshBoard(); this.render(); }));
       box.querySelectorAll("[data-ss]").forEach(b => b.addEventListener("click", () => { this.scope = b.dataset.ss; this.board = null; sfx.blip(); this.refreshBoard(); this.render(); }));
@@ -137,6 +142,7 @@ const Social = {
       $("#scAddBtn").addEventListener("click", add); $("#scAdd").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
       box.querySelectorAll("[data-acc]").forEach(b => b.addEventListener("click", () => { sfx.level(); this.send({ t: "s_accept", code: b.dataset.acc }); }));
       box.querySelectorAll("[data-dec]").forEach(b => b.addEventListener("click", () => this.send({ t: "s_decline", code: b.dataset.dec })));
+      $("#scDelete").addEventListener("click", () => { if (confirm("هيتمسح حسابك وأصحابك ونتايجك من الترتيب نهائيًا، ومينفعش نرجّعهم. متأكد؟")) this.send({ t: "s_delete" }); });
       box.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { if (confirm("تشيل " + b.dataset.nm + " من أصحابك؟")) this.send({ t: "s_remove", code: b.dataset.rm }); }));
     }
   },
@@ -146,7 +152,7 @@ const Social = {
     let body;
     if (!b) body = `<div class="on-wait"><div class="spin"></div><div>بنجيب الترتيب...</div></div>`;
     else if (!b.list.length) body = `<div class="note-box">لسه محدش دخل الترتيب ده. العب ${SOCIAL_GAMES[this.game]} وهتظهر هنا.</div>`;
-    else body = `<ol class="sc-list">${b.list.map(r => `<li class="${r.me ? "me" : ""}"><span class="rk">${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : r.rank}</span><span class="nm">${esc(r.name)}${r.me ? " (انت)" : ""}</span><b>${r.score}</b></li>`).join("")}</ol>
+    else body = `<ol class="sc-list">${b.list.map(r => `<li class="${r.me ? "me" : ""}"><span class="rk">${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : r.rank}</span><span class="nm">${esc(r.name)}${r.me ? " (انت)" : ""}</span><b>${r.score}</b>${r.code ? `<button type="button" class="sc-flag" data-rp="${r.code}" data-nm="${esc(r.name)}" aria-label="بلّغ عن ${esc(r.name)}">⚑</button>` : ""}</li>`).join("")}</ol>
       ${b.you && b.you.rank > b.list.length ? `<div class="sc-you">ترتيبك: <b>${b.you.rank}</b> من ${b.total} · ${b.you.score} نقطة</div>` : ""}
       ${!b.you ? `<div class="sc-you">لسه ما لعبتش ${SOCIAL_GAMES[this.game]} ${this.scope === "week" ? "الأسبوع ده" : ""}، العب وهتدخل الترتيب.</div>` : ""}`;
     return `<div class="sc-chips" role="group" aria-label="اللعبة">${chips(SOCIAL_GAMES, "sg", this.game)}</div>
@@ -161,11 +167,13 @@ const Social = {
         <button class="btn" type="button" id="scAddBtn">ضيف</button></div>
       ${me.incoming.length ? `<div class="on-label">طلبات صداقة</div><ul class="sc-reqs">${me.incoming.map(q => `<li><span>${esc(q.name)}</span><button type="button" class="btn sm" data-acc="${q.code}">قبول</button><button type="button" class="btn sm" data-dec="${q.code}">رفض</button></li>`).join("")}</ul>` : ""}
       <div class="on-label">أصحابك (${me.friends.length})</div>
-      ${me.friends.length ? `<ul class="sc-friends">${me.friends.map(f => `<li><div><b>${esc(f.name)}</b><span>${esc(best(f))}</span></div><button type="button" class="sc-x" data-rm="${f.code}" data-nm="${esc(f.name)}" aria-label="شيل ${esc(f.name)}">×</button></li>`).join("")}</ul>`
-        : `<div class="note-box">لسه ما ضفتش حد. ابعت كودك لصاحبك (دوس على الكود فوق) أو اكتب كوده هنا.</div>`}`;
+      ${me.friends.length ? `<ul class="sc-friends">${me.friends.map(f => `<li><div><b>${esc(f.name)}</b><span>${esc(best(f))}</span></div><button type="button" class="sc-flag" data-rp="${f.code}" data-nm="${esc(f.name)}" aria-label="بلّغ عن ${esc(f.name)}">⚑</button><button type="button" class="sc-x" data-rm="${f.code}" data-nm="${esc(f.name)}" aria-label="شيل ${esc(f.name)}">×</button></li>`).join("")}</ul>`
+        : `<div class="note-box">لسه ما ضفتش حد. ابعت كودك لصاحبك (دوس على الكود فوق) أو اكتب كوده هنا.</div>`}
+      <div class="sc-danger"><div class="note-box">⚑ بلّغ عن لاعب بيستخدم اسم مسيء: بيختفي من عندك فورًا، ولو 3 لاعبين بلّغوا عنه بيختفي من الكل.</div>
+        <button type="button" class="btn danger" id="scDelete">امسح حسابي وكل بياناتي من السيرفر</button></div>`;
   },
   shareCode() {
-    const text = `ضيفني في ملعب المخ! افتح ${location.origin + location.pathname} ودوس «الأصحاب والترتيب» واكتب كودي: ${this.me.code}`;
+    const text = `ضيفني في ملعب المخ! افتح ${SHARE_URL} ودوس «الأصحاب والترتيب» واكتب كودي: ${this.me.code}`;
     if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(text).then(() => toast("اتنسخ! ابعته لصاحبك"), () => toast("كودك: " + this.me.code)); } catch (e) { toast("كودك: " + this.me.code); }
   },

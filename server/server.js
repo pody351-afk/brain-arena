@@ -75,6 +75,8 @@ async function socialMessage(ws, m) {
   else if (m.t === "s_remove") r = social.remove(p, m.code);
   else if (m.t === "s_submit") r = social.submit(p, m.game, m.score);
   else if (m.t === "s_board") r = social.board(p, m.game, m.scope);
+  else if (m.t === "s_report") r = social.report(p, m.code);
+  else if (m.t === "s_delete") { r = social.deleteAccount(p); const set = online.get(ws.pid); online.delete(ws.pid); ws.pid = null; send(ws, r.reply); (r.notify || []).forEach(pushMe); if (set) for (const w of set) w.pid = null; return; }
   else if (m.t === "s_me") r = { reply: social.me(p) };
   else return;
   if (r.error) return send(ws, { t: "s_error", code: r.error });

@@ -236,7 +236,7 @@ const Online = {
     $("#onCode").addEventListener("keydown", e => { if (e.key === "Enter") this.join($("#onCode").value); });
   },
   share() {
-    const text = `تعالى نلعب «${MATCHES[this.game].name}» في ملعب المخ! افتح ${location.origin + location.pathname} ودوس «العب مع صاحبك» واكتب الكود: ${this.code}`;
+    const text = `تعالى نلعب «${MATCHES[this.game].name}» في ملعب المخ! افتح ${SHARE_URL} ودوس «العب مع صاحبك» واكتب الكود: ${this.code}`;
     if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(text).then(() => toast("اتنسخ! ابعته لصاحبك"), () => toast("الكود: " + this.code)); } catch (e) { toast("الكود: " + this.code); }
   },

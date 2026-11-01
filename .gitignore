@@ -4,3 +4,6 @@ test-output/
 _test_page.html
 server/data.json
 server/data.json.tmp
+www/
+node_modules/
+ios/

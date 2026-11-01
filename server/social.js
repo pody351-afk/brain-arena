@@ -11,10 +11,15 @@ const crypto = require("crypto");
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 // أقصى نقط معقولة لكل لعبة (لازم تفضل أعلى من أي نتيجة حقيقية)
 const SCORE_MAX = { speed: 5000, word: 5000, pop: 200000, mem: 50000 };
-const LIMITS = { regsPer10Min: 120, players: 5000, friends: 50, incoming: 30, top: 20 };
+const LIMITS = { hideAfterReports: 3, regsPer10Min: 120, players: 5000, friends: 50, incoming: 30, top: 20 };
 
 const sha = s => crypto.createHash("sha256").update(String(s)).digest("hex");
 const cleanName = n => String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "لاعب";
+// فلتر أسماء بسيط للكلام المسيء (مش كامل: بيمسك الشائع بس، والباقي بيتعالج بالبلاغ والحظر)
+const norm = t => String(t).toLowerCase().replace(/[\u064b-\u065f\u0640]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/(.)\1+/g, "$1").replace(/[^a-z0-9\u0621-\u064a ]/g, "");
+const BAD_SUB = ["شرموط", "منيوك", "منيك", "كسمك", "كس امك", "كس اختك", "معرص", "قحبه", "ابن الكلب", "ابن الوسخه", "ابن المتناكه", "متناك", "fuck", "shit", "bitch", "cunt", "nigg", "porn", "rape", "nazi", "hitler"].map(norm);
+const BAD_WORD = ["عرص", "خول", "زب", "طيز", "كس", "dick", "ass", "sex", "سكس"].map(norm);
+const isBadName = n => { const t = norm(n); return BAD_SUB.some(w => t.includes(w)) || t.split(" ").some(w => BAD_WORD.includes(w)); };
 const okId = s => typeof s === "string" && /^[a-f0-9]{16}$/.test(s);
 const okSecret = s => typeof s === "string" && /^[a-f0-9]{32}$/.test(s);
 // رقم الأسبوع (بيبدأ السبت زي أسبوع مصر) — الترتيب الأسبوعي بيتصفّر لوحده
@@ -74,11 +79,12 @@ function createSocial(store, opts = {}) {
     if (!okId(m.id) || !okSecret(m.secret)) return { error: "bad_auth" };
     let p = db.players[m.id];
     if (!p) {
+      if (isBadName(m.name)) return { error: "bad_name" };
       if (Object.keys(db.players).length >= LIMITS.players) return { error: "full" };
       const t = clock(); regs = regs.filter(x => t - x < 10 * 60 * 1000);
       if (regs.length >= LIMITS.regsPer10Min) return { error: "busy_reg" }; // حماية من إنشاء حسابات بالجملة
       regs.push(t);
-      p = db.players[m.id] = { id: m.id, hash: sha(m.secret), code: newCode(), name: cleanName(m.name), created: clock(), best: {}, week: { k: weekKey(clock()), best: {} }, friends: [], incoming: [] };
+      p = db.players[m.id] = { id: m.id, hash: sha(m.secret), code: newCode(), name: cleanName(m.name), created: clock(), best: {}, week: { k: weekKey(clock()), best: {} }, friends: [], incoming: [], blocked: [], reports: [] };
       byCode.set(p.code, p.id); touch();
     } else if (p.hash !== sha(m.secret)) return { error: "bad_auth" };
     return { player: p };
@@ -89,16 +95,18 @@ function createSocial(store, opts = {}) {
   function me(p) {
     return {
       t: "me", code: p.code, name: p.name, best: p.best, week: rolled(p),
-      friends: p.friends.map(id => db.players[id]).filter(Boolean).map(pub),
-      incoming: p.incoming.map(id => db.players[id]).filter(Boolean).map(q => ({ code: q.code, name: q.name })),
+      friends: p.friends.map(id => db.players[id]).filter(q => q && !hiddenFor(p, q)).map(pub),
+      incoming: p.incoming.map(id => db.players[id]).filter(q => q && !hiddenFor(p, q)).map(q => ({ code: q.code, name: q.name })),
     };
   }
 
   /* كل عملية بترجّع { reply, notify:[ids] } والسيرفر بيبعت */
-  function setName(p, name) { p.name = cleanName(name); touch(); return { reply: me(p), notify: [...p.friends] }; }
+  function setName(p, name) {
+    if (isBadName(name)) return { error: "bad_name" };
+    p.name = cleanName(name); touch(); return { reply: me(p), notify: [...p.friends] }; }
   function addFriend(p, code) {
     const q = db.players[byCode.get(normCode(code))];
-    if (!q) return { error: "no_player" };
+    if (!q || hiddenFor(p, q)) return { error: "no_player" };
     if (q.id === p.id) return { error: "self" };
     if (p.friends.includes(q.id)) return { error: "already" };
     if (p.incoming.includes(q.id)) return accept(p, q.code); // هو كان باعتلي، فالإضافة بتبقى قبول
@@ -128,6 +136,29 @@ function createSocial(store, opts = {}) {
     if (q) { p.friends = p.friends.filter(i => i !== q.id); q.friends = q.friends.filter(i => i !== p.id); touch(); }
     return { reply: me(p), notify: q ? [q.id] : [] };
   }
+  // حذف الحساب نهائيًا (مطلب Apple 5.1.1(v)): بيتمسح من كل مكان
+  function deleteAccount(p) {
+    const ids = [...p.friends];
+    for (const q of Object.values(db.players)) {
+      q.friends = q.friends.filter(i => i !== p.id); q.incoming = q.incoming.filter(i => i !== p.id);
+      q.blocked = (q.blocked || []).filter(i => i !== p.id); q.reports = (q.reports || []).filter(i => i !== p.id);
+    }
+    byCode.delete(p.code); delete db.players[p.id]; touch();
+    return { reply: { t: "deleted" }, notify: ids };
+  }
+  // بلاغ = حظر: اللاعب ده بيختفي من عندك (ترتيب وأصحاب)، ولو 3 لاعبين مختلفين بلّغوا عنه بيختفي من الكل
+  function report(p, code) {
+    const q = db.players[byCode.get(normCode(code))];
+    if (!q || q.id === p.id) return { error: "no_player" };
+    p.blocked = p.blocked || []; q.reports = q.reports || [];
+    if (!p.blocked.includes(q.id)) p.blocked.push(q.id);
+    if (!q.reports.includes(p.id)) q.reports.push(p.id);
+    p.friends = p.friends.filter(i => i !== q.id); q.friends = q.friends.filter(i => i !== p.id);
+    p.incoming = p.incoming.filter(i => i !== q.id); q.incoming = q.incoming.filter(i => i !== p.id); touch();
+    console.log("report:", q.id.slice(0, 4), "by", p.id.slice(0, 4), "total", q.reports.length);
+    return { reply: Object.assign(me(p), { ok: "reported" }), notify: [q.id] };
+  }
+  const hiddenFor = (p, q) => (p.blocked || []).includes(q.id) || (q.blocked || []).includes(p.id) || (q.reports || []).length >= LIMITS.hideAfterReports;
   function submit(p, game, score) {
     const max = SCORE_MAX[game], v = Math.floor(+score);
     if (!max) return { error: "bad_game" };
@@ -144,15 +175,16 @@ function createSocial(store, opts = {}) {
     if (!SCORE_MAX[game]) return { error: "bad_game" };
     let pool = Object.values(db.players);
     if (scope === "friends") { const ids = new Set([p.id, ...p.friends]); pool = pool.filter(q => ids.has(q.id)); }
+    pool = pool.filter(q => q.id === p.id || !hiddenFor(p, q));
     const val = q => (scope === "week" ? rolled(q)[game] : q.best[game]) || 0;
     const rows = pool.map(q => ({ q, v: val(q) })).filter(r => r.v > 0).sort((a, b) => b.v - a.v || a.q.created - b.q.created);
-    const list = rows.slice(0, LIMITS.top).map((r, i) => ({ rank: i + 1, name: r.q.name, score: r.v, me: r.q.id === p.id }));
+    const list = rows.slice(0, LIMITS.top).map((r, i) => ({ rank: i + 1, name: r.q.name, code: r.q.id === p.id ? null : r.q.code, score: r.v, me: r.q.id === p.id }));
     const at = rows.findIndex(r => r.q.id === p.id);
     return { reply: { t: "board", game, scope, list, you: at < 0 ? null : { rank: at + 1, score: rows[at].v }, total: rows.length } };
   }
 
   return {
-    load, flush, auth, me, setName, addFriend, accept, decline, remove, submit, board,
+    load, flush, auth, me, setName, addFriend, accept, decline, remove, submit, board, deleteAccount, report, isBadName,
     get playersCount() { return Object.keys(db.players).length; },
     get storeKind() { return store.kind; }, get lastError() { return lastError; },
     _db: () => db,

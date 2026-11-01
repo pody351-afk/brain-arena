@@ -1,0 +1,16 @@
+{
+  "name": "mal3ab-app",
+  "version": "1.6.0",
+  "private": true,
+  "description": "غلاف iOS (Capacitor) للعبة ملعب المخ. اللعبة نفسها HTML/JS/CSS في المجلد الرئيسي.",
+  "scripts": {
+    "build:www": "node scripts/build-www.js",
+    "ios:add": "npm run build:www && npx cap add ios && bash scripts/patch-ios.sh && npx @capacitor/assets generate --ios && npx cap sync ios"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
+  }
+}

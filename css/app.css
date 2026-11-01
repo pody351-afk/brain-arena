@@ -395,3 +395,10 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 .sc-reqs li span{flex:1;font-weight:800}
 .btn.sm{min-height:44px;font-size:15px;padding:0 14px;box-shadow:none}
 .sc-x{width:44px;height:44px;border-radius:12px;background:var(--panel2);font-size:22px;font-weight:900}
+.sc-flag{width:44px;height:44px;border-radius:12px;background:transparent;color:var(--muted);font-size:18px;flex:none}
+.sc-danger{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.btn.danger{background:transparent;color:#ff8a8a;border:2px solid #ff6b6b;box-shadow:none;font-size:16px;min-height:52px}
+
+/* تطبيق iOS: من غير سحب/ارتداد للصفحة، والكتابة في خانات الإدخال شغالة */
+html,body{overscroll-behavior:none}
+input,textarea{-webkit-user-select:text;user-select:text}
