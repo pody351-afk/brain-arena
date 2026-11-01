@@ -16,9 +16,9 @@ const WordGame = {
     this.s = { time: T, max: T, alive: true, last: performance.now(), score: 0, found: 0, hintsUsed: 0, hintsLeft: this.cfg.hints,
       solved: 0, used: new Set(), pick: [], puzzle: null, got: new Set(), shown: {}, recent: [] };
     ui.stage.innerHTML = `<div class="wd">
-      <div class="wd-slots" id="wdSlots"></div>
+      <div class="wd-slots" id="wdSlots" translate="no"></div>
       <div class="wd-cur" id="wdCur" aria-live="polite"></div>
-      <div class="wd-ring" id="wdRing"></div>
+      <div class="wd-ring" id="wdRing" translate="no"></div>
       <div class="wd-tools">
         <button type="button" class="wd-tool" id="wdHint"></button>
         <button type="button" class="wd-tool" id="wdShuf">لخبط</button>

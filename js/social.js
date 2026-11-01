@@ -112,7 +112,7 @@ const Social = {
     if (!this.joined() || this.busy) {
       box.innerHTML = `<h2 class="h2">الأصحاب والترتيب</h2>
         <p class="sub">انضم عشان تشوف ترتيبك وسط اللاعبين وتضيف أصحابك وتشوف نقطهم.</p>
-        <div class="note-box">اللي هيتبعت للسيرفر: <b>اسمك</b> و<b>أحسن نتيجة</b> ليك في كل لعبة، ومعاهم رمز عشوائي لجهازك. مفيش إيميل ولا رقم تليفون.<br>
+        <div class="note-box">اللي هيتبعت للسيرفر: <b>اسمك</b>، <b>أحسن نتيجة</b> ليك في كل لعبة، ومعاهم رمز عشوائي لجهازك. مفيش إيميل ولا رقم تليفون.<br>
         لو مسحت بيانات المتصفح أو غيّرت الجهاز، الحساب بيضيع.</div>
         <label class="on-label" for="scName">اسمك</label>
         <input class="on-input" id="scName" maxlength="16" autocomplete="nickname" placeholder="اكتب اسمك" value="${esc(Online.name())}">
@@ -124,7 +124,7 @@ const Social = {
     if (!this.me) { box.innerHTML = `<h2 class="h2">الأصحاب والترتيب</h2><div class="on-wait"><div class="spin"></div><div>بنوصل للسيرفر...</div></div>`; return; }
     const me = this.me, inc = me.incoming.length;
     box.innerHTML = `<h2 class="h2">الأصحاب والترتيب</h2>
-      <div class="sc-me"><div><b>${esc(me.name)}</b><span>كود الصاحب بتاعك</span></div>
+      <div class="sc-me"><div><b>${nm(me.name)}</b><span>كود الصاحب بتاعك</span></div>
         <button type="button" class="sc-code" id="scCode" dir="ltr" aria-label="انسخ كودك ${[...me.code].join(" ")}">${me.code}</button></div>
       <div class="sc-tabs" role="tablist">
         <button type="button" role="tab" aria-selected="${this.tab === "board"}" class="${this.tab === "board" ? "on" : ""}" data-tab="board">الترتيب</button>
@@ -152,7 +152,7 @@ const Social = {
     let body;
     if (!b) body = `<div class="on-wait"><div class="spin"></div><div>بنجيب الترتيب...</div></div>`;
     else if (!b.list.length) body = `<div class="note-box">لسه محدش دخل الترتيب ده. العب ${SOCIAL_GAMES[this.game]} وهتظهر هنا.</div>`;
-    else body = `<ol class="sc-list">${b.list.map(r => `<li class="${r.me ? "me" : ""}"><span class="rk">${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : r.rank}</span><span class="nm">${esc(r.name)}${r.me ? " (انت)" : ""}</span><b>${r.score}</b>${r.code ? `<button type="button" class="sc-flag" data-rp="${r.code}" data-nm="${esc(r.name)}" aria-label="بلّغ عن ${esc(r.name)}">⚑</button>` : ""}</li>`).join("")}</ol>
+    else body = `<ol class="sc-list">${b.list.map(r => `<li class="${r.me ? "me" : ""}"><span class="rk">${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : r.rank}</span><span class="nm"><span translate="no">${esc(r.name)}</span>${r.me ? " (انت)" : ""}</span><b>${r.score}</b>${r.code ? `<button type="button" class="sc-flag" data-rp="${r.code}" data-nm="${esc(r.name)}" aria-label="بلّغ عن ${esc(r.name)}">⚑</button>` : ""}</li>`).join("")}</ol>
       ${b.you && b.you.rank > b.list.length ? `<div class="sc-you">ترتيبك: <b>${b.you.rank}</b> من ${b.total} · ${b.you.score} نقطة</div>` : ""}
       ${!b.you ? `<div class="sc-you">لسه ما لعبتش ${SOCIAL_GAMES[this.game]} ${this.scope === "week" ? "الأسبوع ده" : ""}، العب وهتدخل الترتيب.</div>` : ""}`;
     return `<div class="sc-chips" role="group" aria-label="اللعبة">${chips(SOCIAL_GAMES, "sg", this.game)}</div>
@@ -165,15 +165,15 @@ const Social = {
     return `<label class="on-label" for="scAdd">ضيف صاحب بكوده</label>
       <div class="on-join"><input class="on-input" id="scAdd" maxlength="6" dir="ltr" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="كود صاحبك">
         <button class="btn" type="button" id="scAddBtn">ضيف</button></div>
-      ${me.incoming.length ? `<div class="on-label">طلبات صداقة</div><ul class="sc-reqs">${me.incoming.map(q => `<li><span>${esc(q.name)}</span><button type="button" class="btn sm" data-acc="${q.code}">قبول</button><button type="button" class="btn sm" data-dec="${q.code}">رفض</button></li>`).join("")}</ul>` : ""}
+      ${me.incoming.length ? `<div class="on-label">طلبات صداقة</div><ul class="sc-reqs">${me.incoming.map(q => `<li><span>${nm(q.name)}</span><button type="button" class="btn sm" data-acc="${q.code}">قبول</button><button type="button" class="btn sm" data-dec="${q.code}">رفض</button></li>`).join("")}</ul>` : ""}
       <div class="on-label">أصحابك (${me.friends.length})</div>
-      ${me.friends.length ? `<ul class="sc-friends">${me.friends.map(f => `<li><div><b>${esc(f.name)}</b><span>${esc(best(f))}</span></div><button type="button" class="sc-flag" data-rp="${f.code}" data-nm="${esc(f.name)}" aria-label="بلّغ عن ${esc(f.name)}">⚑</button><button type="button" class="sc-x" data-rm="${f.code}" data-nm="${esc(f.name)}" aria-label="شيل ${esc(f.name)}">×</button></li>`).join("")}</ul>`
+      ${me.friends.length ? `<ul class="sc-friends">${me.friends.map(f => `<li><div><b>${nm(f.name)}</b><span>${esc(best(f))}</span></div><button type="button" class="sc-flag" data-rp="${f.code}" data-nm="${esc(f.name)}" aria-label="بلّغ عن ${esc(f.name)}">⚑</button><button type="button" class="sc-x" data-rm="${f.code}" data-nm="${esc(f.name)}" aria-label="شيل ${esc(f.name)}">×</button></li>`).join("")}</ul>`
         : `<div class="note-box">لسه ما ضفتش حد. ابعت كودك لصاحبك (دوس على الكود فوق) أو اكتب كوده هنا.</div>`}
       <div class="sc-danger"><div class="note-box">⚑ بلّغ عن لاعب بيستخدم اسم مسيء: بيختفي من عندك فورًا، ولو 3 لاعبين بلّغوا عنه بيختفي من الكل.</div>
         <button type="button" class="btn danger" id="scDelete">امسح حسابي وكل بياناتي من السيرفر</button></div>`;
   },
   shareCode() {
-    const text = `ضيفني في ملعب المخ! افتح ${SHARE_URL} ودوس «الأصحاب والترتيب» واكتب كودي: ${this.me.code}`;
+    const text = I18N.t(`ضيفني في ملعب المخ! افتح ${SHARE_URL} ودوس «الأصحاب والترتيب» واكتب كودي: ${this.me.code}`);
     if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(text).then(() => toast("اتنسخ! ابعته لصاحبك"), () => toast("كودك: " + this.me.code)); } catch (e) { toast("كودك: " + this.me.code); }
   },

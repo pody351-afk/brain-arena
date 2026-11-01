@@ -102,7 +102,7 @@ const Online = {
       if (was === "play" || was === "countdown" || was === "wait-result") { App.stopGame(); document.querySelectorAll(".inter").forEach(e => e.remove()); }
       this.quit();
       App.show("online");
-      App.openSheet(`<div class="kicker">العب مع صاحبك</div><div class="res-title">${esc(m.name || "صاحبك")} خرج</div>
+      App.openSheet(`<div class="kicker">العب مع صاحبك</div><div class="res-title">${m.name ? nm(m.name) : "صاحبك"} خرج</div>
         <div class="res-msg">${was === "play" || was === "countdown" ? "الماتش اتلغى." : "الأوضة اتقفلت."}</div>
         <div class="btns"><button class="btn main" type="button" id="onOk">تمام</button></div>`, "var(--sky)");
       $("#onOk").addEventListener("click", () => App.closeSheet());
@@ -131,7 +131,7 @@ const Online = {
     const steps = ["3", "2", "1", "يلا!"], each = Math.max(200, Math.floor((m.startsIn || 3500) / 4));
     steps.forEach((s, i) => setTimeout(() => {
       if (this.state !== "countdown") return;
-      el.innerHTML = `<div><div class="k">${esc(this.names[0])} ضد ${esc(this.names[1])}</div><div class="n cd">${s}</div><div class="d">${esc(MATCHES[m.game].desc)}</div></div>`;
+      el.innerHTML = `<div><div class="k">${nm(this.names[0])} ضد ${nm(this.names[1])}</div><div class="n cd">${s}</div><div class="d">${esc(MATCHES[m.game].desc)}</div></div>`;
       i < 3 ? sfx.blip() : sfx.level();
     }, i * each));
     setTimeout(() => { el.remove(); if (this.state === "countdown") this.play(); }, steps.length * each);
@@ -155,7 +155,7 @@ const Online = {
   waitSheet() {
     App.openSheet(`<div class="kicker">${esc(MATCHES[this.game].name)}</div>
       <div class="res-title" style="font-size:34px">خلّصت!</div>
-      <div class="res-msg">نقطك: <b>${this.mine}</b> · ${esc(this.names[1 - this.you])}: <b>${this.opp}</b></div>
+      <div class="res-msg">نقطك: <b>${this.mine}</b> · ${nm(this.names[1 - this.you])}: <b>${this.opp}</b></div>
       <div class="res-msg">${this.oppDone ? "بنحسب النتيجة..." : "مستنيين صاحبك يخلّص..."}</div>`, "var(--sky)");
     $("#sheet").onclick = null;
   },
@@ -174,8 +174,8 @@ const Online = {
     const m = this.last, me = this.you, op = 1 - me, won = m.winner === me, draw = m.winner === -1;
     App.openSheet(`<div class="kicker">${esc(MATCHES[this.game].name)} · أوضة ${esc(this.code)}</div>
       <div class="res-title${won ? " win" : ""}">${draw ? "تعادل!" : won ? "كسبت!" : "خسرت المرة دي"}</div>
-      <div class="vs-final"><div class="${won ? "w" : ""}"><span>${esc(m.names[me])} (انت)</span><b>${m.scores[me]}</b></div>
-        <div class="${m.winner === op ? "w" : ""}"><span>${esc(m.names[op])}</span><b>${m.scores[op]}</b></div></div>
+      <div class="vs-final"><div class="${won ? "w" : ""}"><span>${nm(m.names[me])} (انت)</span><b>${m.scores[me]}</b></div>
+        <div class="${m.winner === op ? "w" : ""}"><span>${nm(m.names[op])}</span><b>${m.scores[op]}</b></div></div>
       ${m.why === "time" ? '<div class="res-msg">النتيجة اتحسبت بآخر نقط وصلت للسيرفر.</div>' : ""}
       <div class="btns"><button class="btn main" type="button" id="onAgain">${this.wantAgain ? "مستنيين صاحبك يوافق..." : "ماتش تاني"}</button>
         <button class="btn" type="button" id="onExit" style="grid-column:1/-1">خروج</button></div>`, won ? "var(--mango)" : "var(--sky)");
@@ -191,7 +191,7 @@ const Online = {
     if (!this.playing()) { el.hidden = true; return; }
     const me = this.state === "wait-result" ? this.mine : scoreNow;
     el.hidden = false;
-    el.innerHTML = `<span class="me">انت <b>${me}</b></span><span class="sep">ضد</span><span class="op${this.opp > me ? " ahead" : ""}">${esc(this.names[1 - this.you] || "صاحبك")} <b>${this.opp}</b>${this.oppDone ? " ✓" : ""}</span>`;
+    el.innerHTML = `<span class="me">انت <b>${me}</b></span><span class="sep">ضد</span><span class="op${this.opp > me ? " ahead" : ""}">${this.names[1 - this.you] ? nm(this.names[1 - this.you]) : "صاحبك"} <b>${this.opp}</b>${this.oppDone ? " ✓" : ""}</span>`;
   },
   hideVs() { const el = $("#vs"); if (el) el.hidden = true; },
 
@@ -236,7 +236,7 @@ const Online = {
     $("#onCode").addEventListener("keydown", e => { if (e.key === "Enter") this.join($("#onCode").value); });
   },
   share() {
-    const text = `تعالى نلعب «${MATCHES[this.game].name}» في ملعب المخ! افتح ${SHARE_URL} ودوس «العب مع صاحبك» واكتب الكود: ${this.code}`;
+    const text = I18N.t(`تعالى نلعب «${MATCHES[this.game].name}» في ملعب المخ! افتح ${SHARE_URL} ودوس «العب مع صاحبك» واكتب الكود: ${this.code}`);
     if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(text).then(() => toast("اتنسخ! ابعته لصاحبك"), () => toast("الكود: " + this.code)); } catch (e) { toast("الكود: " + this.code); }
   },

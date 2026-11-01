@@ -13,7 +13,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const until = async (fn, ms = 8000, step = 50) => { const t = Date.now(); while (Date.now() - t < ms) { if (await fn()) return true; await sleep(step); } return false; };
 let SRV, PORT;
 async function player(browser, name, vp = { width: 390, height: 844 }, q = true) {
-  const ctx = await browser.newContext({ viewport: vp, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'ar-EG', viewport: vp, hasTouch: true, isMobile: true });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const page = await ctx.newPage();
   page.errors = []; page.on('pageerror', e => page.errors.push(e.message));

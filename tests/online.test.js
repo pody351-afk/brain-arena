@@ -15,7 +15,7 @@ const until = async (fn, ms = 8000, step = 50) => { const t = Date.now(); while 
 
 let PORT, SRV;
 async function player(browser, name, vp = { width: 390, height: 844 }) {
-  const ctx = await browser.newContext({ viewport: vp, hasTouch: true, isMobile: true }); // كل لاعب في متصفح لوحده (تخزين منفصل)
+  const ctx = await browser.newContext({ locale: 'ar-EG', viewport: vp, hasTouch: true, isMobile: true }); // كل لاعب في متصفح لوحده (تخزين منفصل)
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const page = await ctx.newPage();
   page.errors = []; page.on('pageerror', e => page.errors.push(e.message));
@@ -87,7 +87,7 @@ async function joinRoom(p, code) { await openOnline(p); await p.fill('#onCode', 
 
   /* ---------- 2. من غير سيرفر ---------- */
   {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } }); await ctx.route(/fonts\./, r => r.abort());
+    const ctx = await browser.newContext({ locale: 'ar-EG', viewport: { width: 390, height: 844 } }); await ctx.route(/fonts\./, r => r.abort());
     const p = await ctx.newPage(); await p.goto('file://' + path.join(ROOT, 'index.html')); await sleep(250);
     await p.evaluate(() => { __mal3ab.Online.base = ''; }); // نمثّل نسخة من غير سيرفر
     await p.tap('#onlineBtn').catch(() => p.click('#onlineBtn')); await sleep(150);

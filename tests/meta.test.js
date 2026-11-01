@@ -13,7 +13,7 @@ const check = (c, n, x = '') => { if (c) { pass++; console.log('PASS ', n); } el
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function newPage(browser, vp = { width: 390, height: 844 }, mobile = true, ctxIn) {
-  const ctx = ctxIn || await browser.newContext({ viewport: vp, hasTouch: mobile, isMobile: mobile });
+  const ctx = ctxIn || await browser.newContext({ locale: 'ar-EG', viewport: vp, hasTouch: mobile, isMobile: mobile });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const page = await ctx.newPage();
   page.errors = []; page.on('pageerror', e => page.errors.push(e.message));

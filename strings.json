@@ -1,0 +1,1507 @@
+{
+"(انت)": [
+"js/social.js"
+],
+"+{} XP · رتبة جديدة: مستوى {}": [
+"js/app.js"
+],
+"3 نجوم: من غير تلميح · نجمتين: تلميح واحد": [
+"js/levels.js"
+],
+"3 نجوم: من غير ولا غلطة · نجمتين: غلطتين بالكتير": [
+"js/levels.js"
+],
+"3 نجوم: من غير ولا غلطة في الأجزاء التلاتة": [
+"js/levels.js"
+],
+"3 نجوم: يفضل معاك ربع الحركات تقريبًا أو أكتر": [
+"js/levels.js"
+],
+"45 ثانية أسئلة سريعة. اللي يجمع نقط أكتر يكسب.": [
+"js/online.js"
+],
+": \"&quot;\" }[ch]));\n\n// التخزين المحلي على جهاز اللاعب. ممكن يكون مقفول (وضع التصفح الخاص)، فكل حاجة جوّه try/catch.\nconst store = {\n  get(k, d) { try { const v = localStorage.getItem(\"mal3ab_\" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },\n  set(k, v) { try { localStorage.setItem(\"mal3ab_\" + k, JSON.stringify(v)); return true; } catch (e) { return false; } }\n};\nconst reduceMotion = matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n\n/* ---------- الإعدادات ---------- */\nconst Settings = {\n  data: null,\n  load() {\n    const d = store.get(\"settings\", null);\n    const legacySound = store.get(\"sound\", true); // من النسخة الأولى\n    this.data = Object.assign({ sound: legacySound !== false, vibrate: true }, d && typeof d === \"object\" ? d : {});\n    return this.data;\n  },\n  set(k, v) { this.data[k] = v; store.set(\"settings\", this.data); }\n};\nSettings.load();\n\n/* ---------- الصوت (متولّد بالكود: مفيش ملفات ولا تراخيص) ---------- */\nlet actx = null;\nfunction ensureAudio() {\n  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }\n  if (actx && actx.state === \"suspended\") actx.resume();\n}\nfunction tone(f, d = 0.12, type = \"sine\", v = 0.15, slide = 0) {\n  if (!Settings.data.sound || !actx) return;\n  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();\n  o.type = type; o.frequency.setValueAtTime(f, t);\n  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f + slide), t + d);\n  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);\n  o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + 0.02);\n}\nconst sfx = {\n  good(c = 0) { tone(520 + c * 35, 0.09, \"triangle\", 0.18); setTimeout(() => tone(780 + c * 35, 0.11, \"triangle\", 0.14), 55); },\n  bad() { tone(190, 0.28, \"sawtooth\", 0.11, -90); },\n  pop(n) { tone(260 + Math.min(n, 16) * 55, 0.1, \"square\", 0.07, 260); },\n  level() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.16, \"triangle\", 0.16), i * 90)); },\n  cheer() { [784, 988, 1175].forEach((f, i) => setTimeout(() => tone(f, 0.12, \"triangle\", 0.14), i * 70)); },\n  over() { [392, 330, 262].forEach((f, i) => setTimeout(() => tone(f, 0.22, \"triangle\", 0.15), i * 150)); },\n  blip() { tone(660, 0.05, \"sine\", 0.08); },\n  boom() { tone(90, 0.35, \"sawtooth\", 0.16, -40); },\n  note(i) { tone([392, 440, 494, 523, 587, 659, 698, 784, 880][i % 9], 0.18, \"triangle\", 0.14); }\n};\nfunction buzz(p) { if (!Settings.data.vibrate) return; try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }\n// الكيبورد: Enter/Space على زرار بيعمل click بـ detail = 0. اللمس والماوس بيتعاملوا مع pointerdown بس، فمفيش حساب مرتين.\nfunction onKeyActivate(el, fn) { el.addEventListener(\"click\", e => { if (e.detail === 0) fn(); }); }\nfunction onTap(el, fn) { el.addEventListener(\"pointerdown\", e => { e.preventDefault(); fn(e); }); onKeyActivate(el, fn); }\n\n/* ---------- المؤثرات ---------- */\nconst fx = $(\"#fx\"), fctx = fx.getContext(\"2d\");\nlet parts = [], fxRunning = false;\nfunction sizeFx() { const d = devicePixelRatio || 1; fx.width = innerWidth * d; fx.height = innerHeight * d; fctx.setTransform(d, 0, 0, d, 0, 0); }\naddEventListener(\"resize\", sizeFx); sizeFx();\nfunction burst(x, y, color, n = 14) {\n  if (reduceMotion) return;\n  if (parts.length > 400) return; // حد أقصى عشان الأجهزة الضعيفة\n  for (let i = 0; i": [
+"js/core.js"
+],
+"PLAN طويل في عالم": [
+"js/levels.js"
+],
+"PLAN قصير في عالم": [
+"js/levels.js"
+],
+"p.life > 0);\n  for (const p of parts) {\n    p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= 0.028;\n    fctx.globalAlpha = Math.max(p.life, 0); fctx.fillStyle = p.color;\n    fctx.beginPath(); fctx.arc(p.x, p.y, p.r * p.life + 1, 0, 7); fctx.fill();\n  }\n  fctx.globalAlpha = 1;\n  if (parts.length) requestAnimationFrame(fxLoop); else { fxRunning = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }\n}\nfunction floatText(x, y, text, cls = \"\") {\n  const el = document.createElement(\"div\");\n  el.className = \"float \" + cls; el.textContent = text;\n  el.style.left = x + \"px\"; el.style.top = y + \"px\";\n  document.body.appendChild(el); setTimeout(() => el.remove(), 900);\n}\nfunction centerOf(el) { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }\nfunction toast(t) { document.querySelectorAll(\".toast\").forEach(e => e.remove()); const el = document.createElement(\"div\"); el.className = \"toast\"; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1800); }\n\n/* ---------- شريط اللعب ---------- */\nconst ui = { play: $(\"#play\"), stage: $(\"#stage\"), score: $(\"#hudScore\"), info: $(\"#hudInfo\"),\n  bar: $(\"#hudBar\"), barWrap: $(\"#barWrap\"), title: $(\"#hudTitle\"), over: $(\"#over\") };\nconst hud = { offset: 0, value: 0 }; // offset: في مراحل الزعيم النقط بتتجمع من كذا جزء\nlet scoreNow = 0;\nfunction setScore(v) { hud.value = v; scoreNow = v + hud.offset; ui.score.textContent = scoreNow; ui.score.classList.remove(\"bump\"); void ui.score.offsetWidth; ui.score.classList.add(\"bump\"); }\nfunction resetScore() { hud.value = 0; scoreNow = hud.offset; ui.score.textContent = scoreNow; }\nfunction setInfo(html) { ui.info.innerHTML = html; }\nfunction setBar(frac, show = true) { ui.barWrap.hidden = !show; const f = Math.max(0, Math.min(1, frac)); ui.bar.style.transform = `scaleX(${f})`; ui.bar.classList.toggle(\"low\", show && f": [
+"js/core.js"
+],
+"{} (انت)": [
+"js/online.js"
+],
+"{} XP · فاضل {} XP للمستوى {}": [
+"js/app.js"
+],
+"{} XP · فاضل {} للمستوى {}": [
+"js/app.js"
+],
+"{} · أوضة {}": [
+"js/online.js"
+],
+"{} · ابعت الكود ده لصاحبك، ولما يدخل الماتش هيبدأ لوحده.": [
+"js/online.js"
+],
+"{} · بيتجدد بعد {}": [
+"js/app.js"
+],
+"{} · مستوى {}": [
+"js/app.js"
+],
+"{} · مكافأة الإكمال {} XP": [
+"js/app.js"
+],
+"{} جاهزة للاستلام": [
+"js/app.js"
+],
+"{} خرج": [
+"js/online.js"
+],
+"{} دخل الأوضة!": [
+"js/online.js"
+],
+"{} دقيقة": [
+"js/meta.js"
+],
+"{} ساعة": [
+"js/meta.js"
+],
+"{} ضد {}": [
+"js/online.js"
+],
+"{} عايز ماتش تاني": [
+"js/online.js"
+],
+"{} عوالم و{} مستوى. كل 10 مستويات فيه زعيم بيجمع كذا لعبة. نجمة واحدة تكفي عشان تفتح اللي بعده، و«عالم الكلمات» مفتوح من الأول.": [
+"js/app.js"
+],
+"{} كلمات من {}": [
+"js/levels.js"
+],
+"{} من {}": [
+"js/app.js"
+],
+"{} نجوم": [
+"js/app.js"
+],
+"{} ورا بعض": [
+"js/app.js",
+"js/games/speed.js"
+],
+"{} ورا بعض! النقط ×{}": [
+"js/games/mem.js"
+],
+"{} يوم": [
+"js/meta.js"
+],
+"{}. عدّي {} جولات (أول جولة {}{})": [
+"js/levels.js"
+],
+"{}النقط {}": [
+"js/games/word.js"
+],
+"· نجومك دلوقتي {} من 3": [
+"js/app.js"
+],
+"،": [
+"js/social.js"
+],
+"، ثم": [
+"js/levels.js"
+],
+"؟": [
+"js/games/speed.js"
+],
+"أحسن نتايج اللعب الحر": [
+"js/app.js"
+],
+"أحسن نتيجة": [
+"js/social.js"
+],
+"أحسن نتيجة ليك:": [
+"js/app.js"
+],
+"أحمر": [
+"js/games/speed.js"
+],
+"أخضر": [
+"js/games/speed.js"
+],
+"أرقام": [
+"js/levels.js"
+],
+"أرقام وبس": [
+"js/meta.js"
+],
+"أزرق": [
+"js/games/speed.js"
+],
+"أسئلة خاطفة ورا بعض: حساب، ألوان، وأنهي أكبر. كل إجابة صح بتديك وقت زيادة.": [
+"index.html"
+],
+"أسبوع كامل": [
+"js/meta.js"
+],
+"أستاذ": [
+"js/progress.js"
+],
+"أسرع مخ": [
+"index.html",
+"js/games/speed.js",
+"js/levels.js",
+"js/social.js"
+],
+"أسطورة": [
+"js/progress.js"
+],
+"أسطورة الفرقعة": [
+"js/games/pop.js"
+],
+"أسطورة المخ": [
+"js/games/speed.js"
+],
+"أسطورة!": [
+"js/games/speed.js"
+],
+"أصحابك ({})": [
+"js/social.js"
+],
+"أصعب حاجة في الملعب.": [
+"js/levels.js"
+],
+"أصغر": [
+"js/games/speed.js"
+],
+"أصفر": [
+"js/games/speed.js"
+],
+"أصوات الإجابة والفرقعة": [
+"js/app.js"
+],
+"أطول سلسلة تحدي يومي": [
+"js/app.js"
+],
+"أكبر": [
+"js/games/speed.js"
+],
+"ألغاز": [
+"js/games/word.js"
+],
+"ألغاز: {} ·": [
+"js/games/word.js"
+],
+"ألوان بتخدع العين ولوحات أكبر.": [
+"js/levels.js"
+],
+"أنهي": [
+"js/games/speed.js"
+],
+"أو ادخل أوضة صاحبك": [
+"js/online.js"
+],
+"أول اتصال ممكن ياخد لحد دقيقة لو السيرفر كان نايم.": [
+"js/online.js"
+],
+"أول خطوة": [
+"js/meta.js"
+],
+"أول رقم قياسي ليك!": [
+"js/app.js"
+],
+"أول عالم": [
+"js/meta.js"
+],
+"أونلاين بكود": [
+"index.html"
+],
+"أيام": [
+"js/app.js"
+],
+"إعادة": [
+"js/app.js"
+],
+"إلغاء": [
+"js/online.js"
+],
+"إنجاز جديد: {} · +{} XP": [
+"js/app.js"
+],
+"إنجاز من {}": [
+"js/app.js"
+],
+"إيه الرقم": [
+"js/games/speed.js"
+],
+"ابدأ": [
+"js/app.js"
+],
+"ابدأ التحدي": [
+"js/app.js"
+],
+"ابدأ: مستوى 1": [
+"js/app.js"
+],
+"ابعت الكود لصاحبك": [
+"js/online.js"
+],
+"اتاستلمت": [
+"js/app.js"
+],
+"اتفتح · +{} XP": [
+"js/app.js"
+],
+"اتمسح التقدّم": [
+"js/app.js"
+],
+"اتمسح حسابك وكل بياناتك من السيرفر": [
+"js/social.js"
+],
+"اتنسخ! ابعته لصاحبك": [
+"js/online.js",
+"js/social.js"
+],
+"اتنسخت! ابعتها لصحابك": [
+"js/app.js"
+],
+"اجمع 150 نجمة": [
+"js/meta.js"
+],
+"اجمع 3 صح ورا بعض للمضاعف": [
+"js/games/speed.js"
+],
+"اجمع 30 نجمة": [
+"js/meta.js"
+],
+"اجمع 300 نجمة": [
+"js/meta.js"
+],
+"اجمع {} نقطة في {} حركة": [
+"js/levels.js"
+],
+"احفظ الرقم ده ({} أرقام)": [
+"js/games/mem.js"
+],
+"اختار اللعبة": [
+"js/online.js"
+],
+"ادخل": [
+"js/online.js"
+],
+"استلم": [
+"js/app.js"
+],
+"استلم مكافأة 10 مهام": [
+"js/meta.js"
+],
+"اسمك": [
+"js/online.js",
+"js/social.js"
+],
+"اعمل أوضة": [
+"js/online.js"
+],
+"اعمل أوضة وابعت الكود لصاحبك، أو ادخل بكوده. انتو الاتنين بتلعبوا في نفس الوقت، وبتشوفوا نقط بعض لايف.": [
+"js/online.js"
+],
+"اغلب 10 زعماء": [
+"js/meta.js"
+],
+"اغلب 5 زعماء": [
+"js/meta.js"
+],
+"اغلب أول زعيم": [
+"js/meta.js"
+],
+"اغلب زعيم": [
+"js/meta.js"
+],
+"افتكر": [
+"index.html",
+"js/games/mem.js",
+"js/levels.js",
+"js/social.js"
+],
+"افتكر الأرقام واكتبها": [
+"js/levels.js"
+],
+"افتكر الترتيب ودوس بالعكس (من الآخر للأول)": [
+"js/levels.js"
+],
+"افتكر المربعات اللي بتنوّر": [
+"js/levels.js"
+],
+"افتكر ترتيب المربعات ودوس بنفس الترتيب": [
+"js/levels.js"
+],
+"اكتب اسمك": [
+"js/online.js",
+"js/social.js"
+],
+"اكتب اسمك الأول": [
+"js/online.js",
+"js/social.js"
+],
+"اكتبه من دماغك": [
+"js/games/mem.js"
+],
+"اكسب 10 مستويات": [
+"js/meta.js"
+],
+"اكسب أول ماتش أونلاين": [
+"js/meta.js"
+],
+"اكسب مستويين": [
+"js/meta.js"
+],
+"اكسر {} صخور في {} حركة. الصخرة بتتكسر لما تفرقع جنبها، وحتى حلوى لوحدها جنب صخرة ينفع تخبطها": [
+"js/levels.js"
+],
+"الأحمر": [
+"js/levels.js"
+],
+"الأخضر": [
+"js/levels.js"
+],
+"الأزرق": [
+"js/levels.js"
+],
+"الأسبوع ده": [
+"js/social.js"
+],
+"الأصحاب": [
+"js/social.js"
+],
+"الأصحاب والترتيب": [
+"index.html",
+"js/social.js"
+],
+"الأصحاب{}": [
+"js/social.js"
+],
+"الأصفر": [
+"js/levels.js"
+],
+"الأوضة اتقفلت.": [
+"js/online.js"
+],
+"الأوضة جاهزة": [
+"js/online.js"
+],
+"الأوضة دي مليانة (فيها اتنين).": [
+"js/online.js"
+],
+"الإعدادات": [
+"index.html",
+"js/app.js"
+],
+"الإنجازات": [
+"index.html",
+"js/app.js"
+],
+"الاتصال بالسيرفر اتقطع": [
+"js/online.js"
+],
+"الاسم ده مش مناسب. اختار اسم تاني.": [
+"js/social.js"
+],
+"الاهتزاز": [
+"js/app.js"
+],
+"البنفسجي": [
+"js/levels.js"
+],
+"التحدي اليومي": [
+"js/meta.js"
+],
+"التحدي اليومي · {}": [
+"js/app.js"
+],
+"التحدي اليومي · {} · {}": [
+"js/app.js"
+],
+"التحدي لسه مستنيك النهارده. جرّب تاني!": [
+"js/app.js"
+],
+"الترتيب": [
+"js/social.js"
+],
+"الترتيب الصح": [
+"js/meta.js"
+],
+"التعليمات بتتقلب. اقرا السؤال كويس.": [
+"js/levels.js"
+],
+"التنقل": [
+"index.html"
+],
+"الجزء {} من 3": [
+"js/app.js"
+],
+"الحركات: {}": [
+"js/app.js"
+],
+"الحساب ده مش مطابق لجهازك. لو مسحت بيانات المتصفح الحساب القديم بيضيع.": [
+"js/social.js"
+],
+"الحفظ حاليًا على الجهاز ده. لو مسحت بيانات المتصفح التقدّم هيتمسح.": [
+"js/app.js"
+],
+"الخريطة": [
+"js/app.js"
+],
+"الرئيسية": [
+"index.html",
+"js/app.js"
+],
+"السيرفر زحمة دلوقتي. جرّب كمان شوية.": [
+"js/online.js"
+],
+"السيرفر لسه ما اشتغلش.": [
+"js/social.js"
+],
+"السيرفر ما ردّش. جرّب تاني كمان شوية.": [
+"js/online.js",
+"js/social.js"
+],
+"السيرفر مجاني، فلو محدش لعب من فترة أول اتصال بياخد حوالي دقيقة. النقط بيبعتها جهاز كل لاعب، فالماتش للعب مع أصحابك مش للمسابقات.": [
+"js/online.js"
+],
+"السيرفر وصل للحد الأقصى من اللاعبين.": [
+"js/social.js"
+],
+"الصوت: شغّال": [
+"index.html",
+"js/app.js"
+],
+"الصوت: مقفول": [
+"js/app.js"
+],
+"الطلب اتبعت قبل كده.": [
+"js/social.js"
+],
+"الطلب اتبعت!": [
+"js/social.js"
+],
+"الطلب ده مبقاش موجود.": [
+"js/social.js"
+],
+"العب 20 مرة": [
+"js/meta.js"
+],
+"العب 3 مرات (أي لعبة)": [
+"js/meta.js"
+],
+"العب 5 مرات في اللعب الحر": [
+"js/meta.js"
+],
+"العب 50 مرة": [
+"js/meta.js"
+],
+"العب «افتكر» مرتين": [
+"js/meta.js"
+],
+"العب «فرقع» مرتين": [
+"js/meta.js"
+],
+"العب الألعاب الأربعة في اللعب الحر": [
+"js/meta.js"
+],
+"العب تاني": [
+"index.html",
+"js/app.js"
+],
+"العب مرة في اللعب الحر": [
+"js/meta.js"
+],
+"العب مع صاحبك": [
+"index.html",
+"js/online.js"
+],
+"العربية": [
+"js/app.js"
+],
+"العربية / English": [
+"js/app.js"
+],
+"الغلط جزء من اللعبة. ركّز وابدأ تاني.": [
+"js/app.js"
+],
+"الكل": [
+"js/social.js"
+],
+"الكلمة 3 حروف على الأقل": [
+"js/games/word.js"
+],
+"الكلمة، مش لونها": [
+"js/games/speed.js"
+],
+"الكلمة، مش معناها": [
+"js/games/speed.js"
+],
+"الكمال": [
+"js/meta.js"
+],
+"الكود": [
+"js/online.js"
+],
+"الكود 4 حروف/أرقام": [
+"js/online.js"
+],
+"الكود:": [
+"js/online.js"
+],
+"اللاعب ده عنده طلبات كتير دلوقتي.": [
+"js/social.js"
+],
+"اللعبة": [
+"js/social.js"
+],
+"اللعبة دي مش متاحة أونلاين.": [
+"js/online.js"
+],
+"اللغة": [
+"js/app.js"
+],
+"اللي هيتبعت للسيرفر:": [
+"js/social.js"
+],
+"المؤثرات الصوتية": [
+"js/app.js"
+],
+"الماتش اتلغى.": [
+"js/online.js"
+],
+"المستوى اللي بعده": [
+"js/app.js"
+],
+"المستويات": [
+"index.html"
+],
+"المكافأة {} XP": [
+"js/app.js"
+],
+"المكافأة: {} XP مرة واحدة النهارده. كل يوم ورا بعض بيزوّد المكافأة.": [
+"js/app.js"
+],
+"المكافأة: لحد {} XP {}": [
+"js/app.js"
+],
+"المهام": [
+"index.html"
+],
+"المهام والإنجازات": [
+"js/app.js"
+],
+"الناقص": [
+"js/games/speed.js"
+],
+"النتيجة": [
+"index.html"
+],
+"النتيجة اتحسبت بآخر نقط وصلت للسيرفر.": [
+"js/online.js"
+],
+"النجوم = القلوب اللي فاضلة معاك في الآخر": [
+"js/levels.js"
+],
+"النطاق": [
+"js/social.js"
+],
+"النقط": [
+"js/games/pop.js"
+],
+"النقط بيبعتها جهاز كل لاعب، فالترتيب للمتعة مش للمسابقات. الترتيب الأسبوعي بيبدأ من السبت.": [
+"js/social.js"
+],
+"النقط: {}": [
+"js/app.js"
+],
+"النمط": [
+"js/games/speed.js"
+],
+"الهدف: {}": [
+"js/games/pop.js"
+],
+"الوقت: {} ثانية · {} تلميحات": [
+"js/app.js"
+],
+"الوقت: {} ثانية · الغلطة بـ 3 ثواني": [
+"js/app.js"
+],
+"امسح": [
+"js/games/mem.js",
+"js/games/word.js"
+],
+"امسح حسابي وكل بياناتي من السيرفر": [
+"js/social.js"
+],
+"انت": [
+"js/online.js"
+],
+"انتو أصحاب بالفعل.": [
+"js/social.js"
+],
+"انسخ كودك {}": [
+"js/social.js"
+],
+"انسخ نتيجتك": [
+"index.html"
+],
+"انضم": [
+"js/social.js"
+],
+"انضم عشان تشوف ترتيبك وسط اللاعبين وتضيف أصحابك وتشوف نقطهم.": [
+"js/social.js"
+],
+"ب": [
+"index.html"
+],
+"بالعكس": [
+"js/meta.js"
+],
+"بتتجدد بعد {}": [
+"js/app.js"
+],
+"بحار": [
+"js/levels.js"
+],
+"بداية قوية": [
+"js/meta.js"
+],
+"برافو!": [
+"js/games/mem.js",
+"js/games/word.js"
+],
+"بلّغ عن {}": [
+"js/social.js"
+],
+"بنجيب الترتيب...": [
+"js/social.js"
+],
+"بنحسب النتيجة...": [
+"js/online.js"
+],
+"بنوصل للسيرفر...": [
+"js/online.js",
+"js/social.js"
+],
+"بنوصل للسيرفر... أول مرة ممكن ياخد لحد دقيقة.": [
+"js/social.js"
+],
+"بيتهجّى": [
+"js/games/word.js"
+],
+"بيعرف كلمات": [
+"js/games/word.js"
+],
+"تأكيد": [
+"js/games/word.js"
+],
+"تبلّغ عن": [
+"js/social.js"
+],
+"تتعرّف على الألعاب التلاتة بهدوء.": [
+"js/levels.js"
+],
+"تحدي النهارده": [
+"js/meta.js"
+],
+"تحديات مخلوطة وأطول.": [
+"js/levels.js"
+],
+"ترتيب، وعكس، وأرقام لازم تفتكرها.": [
+"js/levels.js"
+],
+"ترتيبك:": [
+"js/social.js"
+],
+"تشيل": [
+"js/social.js"
+],
+"تعادل!": [
+"js/online.js"
+],
+"تعالى نلعب «{}» في ملعب المخ! افتح {} ودوس «العب مع صاحبك» واكتب الكود: {}": [
+"js/online.js"
+],
+"تقدّمك محفوظ على الجهاز ده بس. لما نضيف الحسابات (مرحلة الأونلاين) هتقدر تنقله وتلعب من أي جهاز.": [
+"js/app.js"
+],
+"تلميح ({})": [
+"js/games/word.js"
+],
+"تم. اللاعب ده اختفى من عندك وهنراجع البلاغ.": [
+"js/social.js"
+],
+"تمام": [
+"js/online.js"
+],
+"جامع النجوم": [
+"js/meta.js"
+],
+"جاوب 100 إجابة صح في «أسرع مخ»": [
+"js/meta.js"
+],
+"جاوب 15 إجابة صح في «أسرع مخ»": [
+"js/meta.js"
+],
+"جاوب {} إجابة صح قبل ما {} ثانية يخلصوا": [
+"js/levels.js"
+],
+"جاوبت {} صح": [
+"js/games/speed.js"
+],
+"جبت {} في «{}» على ملعب المخ ({}). تقدر تغلبني؟": [
+"js/app.js"
+],
+"جرّب كله": [
+"js/meta.js"
+],
+"جولة {} / {}": [
+"js/games/mem.js"
+],
+"حاول تاني": [
+"js/app.js"
+],
+"حركات: {}": [
+"js/games/pop.js"
+],
+"حروف": [
+"js/games/word.js"
+],
+"حروف متلخبطة قدامك. دوس عليها بالترتيب وكوّن كل الكلمات المخبّية قبل الوقت ما يخلص.": [
+"index.html"
+],
+"حصلت مشكلة": [
+"js/online.js",
+"js/social.js"
+],
+"حلم": [
+"js/levels.js"
+],
+"خبير": [
+"js/progress.js"
+],
+"خد 3 نجوم في 10 مستويات": [
+"js/meta.js"
+],
+"خد 3 نجوم في 5 مستويات": [
+"js/meta.js"
+],
+"خد 3 نجوم في أي مستوى": [
+"js/meta.js"
+],
+"خدت مكافأة النهارده ({}). تقدر تلعبه تاني للمتعة وتحسّن نتيجتك.": [
+"js/app.js"
+],
+"خدت مكافأة النهارده قبل كده": [
+"js/app.js"
+],
+"خدعة الألوان": [
+"js/meta.js"
+],
+"خروج": [
+"js/online.js"
+],
+"خريطة المستويات": [
+"js/app.js"
+],
+"خسرت المرة دي": [
+"js/online.js"
+],
+"خلصت المحاولات": [
+"js/games/mem.js"
+],
+"خليط المخ": [
+"js/meta.js"
+],
+"خلّص 10 مستويات": [
+"js/meta.js"
+],
+"خلّص 100 مستوى": [
+"js/meta.js"
+],
+"خلّص 50 مستوى": [
+"js/meta.js"
+],
+"خلّص أول تحدي يومي": [
+"js/meta.js"
+],
+"خلّص أول مستوى": [
+"js/meta.js"
+],
+"خلّص التحدي اليومي": [
+"js/meta.js"
+],
+"خلّص التحدي اليومي 3 أيام": [
+"js/meta.js"
+],
+"خلّص التحدي اليومي 3 أيام ورا بعض": [
+"js/meta.js"
+],
+"خلّص التحدي اليومي 7 أيام ورا بعض": [
+"js/meta.js"
+],
+"خلّص المهام واستلم الـ XP بتاعها. مهام النهارده بتتغيّر كل يوم، ومهام الأسبوع كل سبت.": [
+"js/app.js"
+],
+"خلّص مستوى {} الأول": [
+"js/app.js"
+],
+"خلّصت {}! مكافأة {} XP": [
+"js/app.js"
+],
+"خلّصت اللغز! +50 و+{} ثانية": [
+"js/games/word.js"
+],
+"خلّصت الملعب": [
+"js/meta.js"
+],
+"خلّصت كل المستويات! حسّن نجومك": [
+"js/app.js"
+],
+"خلّصت!": [
+"js/online.js"
+],
+"خلّصته النهارده {}": [
+"js/app.js"
+],
+"دايرة": [
+"js/games/speed.js"
+],
+"ده كودك انت 🙂": [
+"js/social.js"
+],
+"دوس بالترتيب العكسي: من الآخر للأول": [
+"js/games/mem.js"
+],
+"دوس بنفس الترتيب": [
+"js/games/mem.js"
+],
+"دوس على": [
+"js/games/speed.js"
+],
+"دوس على مجموعة حلويات من نفس اللون. كل ما المجموعة أكبر، النقط تضاعف. 6 أو أكتر تعمل قنبلة.": [
+"index.html"
+],
+"ذاكرة حديد": [
+"js/games/mem.js",
+"js/meta.js"
+],
+"ذاكرة حديد!": [
+"js/games/mem.js"
+],
+"ذاكرة سمكة": [
+"js/games/mem.js"
+],
+"ذاكرة فيل": [
+"js/games/mem.js"
+],
+"ذاكرة كويسة": [
+"js/games/mem.js"
+],
+"ذكي": [
+"js/progress.js"
+],
+"رتبة جديدة: مستوى {} · {}": [
+"js/app.js"
+],
+"رجوع": [
+"index.html",
+"js/app.js"
+],
+"رحّالة": [
+"js/meta.js"
+],
+"رفض": [
+"js/social.js"
+],
+"رقم قياسي جديد! كان": [
+"js/app.js"
+],
+"رقم ناقص، أنماط، وضرب سريع.": [
+"js/levels.js"
+],
+"ركّز في الترتيب... {} مربعات": [
+"js/games/mem.js"
+],
+"ركّز... {} مربعات": [
+"js/games/mem.js"
+],
+"ركّز... وبعدين دوس بالعكس": [
+"js/games/mem.js"
+],
+"زعيم": [
+"js/app.js",
+"js/levels.js"
+],
+"زعيم {} · {}/3": [
+"js/app.js"
+],
+"زعيم {}: 3 أجزاء ورا بعض. {}. لو خسرت جزء بتعيد من الأول.": [
+"js/levels.js"
+],
+"زعيم غلبته من {}": [
+"js/app.js"
+],
+"ساحر": [
+"js/levels.js"
+],
+"سباق أسرع مخ": [
+"js/online.js"
+],
+"سباق الحساب": [
+"js/meta.js"
+],
+"سباق الكلمات": [
+"js/online.js"
+],
+"سريع البديهة": [
+"js/progress.js"
+],
+"سلسلتك بقت {} {} ورا بعض. ارجع بكرة عشان تكبر!": [
+"js/app.js"
+],
+"سلسلتك: {} {} · نوع التحدي وهدفه واحد لكل اللاعبين النهارده": [
+"js/app.js"
+],
+"سما منوّرة": [
+"js/meta.js"
+],
+"سيرفر اللعب الأونلاين لسه ما اشتغلش": [
+"js/online.js"
+],
+"سيرفر اللعب الأونلاين لسه ما اشتغلش. أول ما يشتغل الزراير دي هتشتغل.": [
+"js/online.js"
+],
+"شغّيل": [
+"js/meta.js"
+],
+"شيل {}": [
+"js/social.js"
+],
+"صاحبك": [
+"js/online.js"
+],
+"صاحبك عنده نسخة تانية من اللعبة. خلّوا الاتنين يحدّثوا الصفحة.": [
+"js/online.js"
+],
+"صح": [
+"js/games/speed.js"
+],
+"صح ولا غلط؟": [
+"js/games/speed.js"
+],
+"صح!": [
+"js/games/word.js"
+],
+"صح: {}": [
+"js/games/speed.js"
+],
+"صح: {} / {}": [
+"js/games/speed.js"
+],
+"صخور": [
+"js/games/pop.js"
+],
+"صياد الزعماء": [
+"js/meta.js"
+],
+"ضد": [
+"js/online.js"
+],
+"ضيف": [
+"js/social.js"
+],
+"ضيف صاحب بكوده": [
+"js/social.js"
+],
+"ضيفني في ملعب المخ! افتح {} ودوس «الأصحاب والترتيب» واكتب كودي: {}": [
+"js/social.js"
+],
+"طلبات صداقة": [
+"js/social.js"
+],
+"عاش!": [
+"js/games/mem.js",
+"js/games/speed.js",
+"js/games/word.js"
+],
+"عالم الأساطير": [
+"js/levels.js"
+],
+"عالم التركيز": [
+"js/levels.js"
+],
+"عالم الحساب": [
+"js/levels.js"
+],
+"عالم الخداع": [
+"js/levels.js"
+],
+"عالم الذاكرة": [
+"js/levels.js"
+],
+"عالم السرعة": [
+"js/levels.js"
+],
+"عالم العباقرة": [
+"js/levels.js"
+],
+"عالم الكلمات": [
+"js/levels.js"
+],
+"عالم المبتدئين": [
+"js/levels.js"
+],
+"عالم كمّلته من {}": [
+"js/app.js"
+],
+"عبقري": [
+"js/progress.js"
+],
+"عبقري صغير": [
+"js/progress.js"
+],
+"عدّيت التحدي!": [
+"js/app.js"
+],
+"عربي": [
+"js/app.js",
+"js/levels.js"
+],
+"على الموبايلات اللي بتدعمه": [
+"js/app.js"
+],
+"عندك 3 نجوم في المستوى ده من قبل": [
+"js/app.js"
+],
+"غلط": [
+"js/games/speed.js"
+],
+"غلطات:": [
+"js/games/speed.js"
+],
+"فجّر {} {} في {} حركة (مجموعة 6 أو أكتر بتعمل قنبلة)": [
+"js/levels.js"
+],
+"فرقع": [
+"index.html",
+"js/games/pop.js",
+"js/levels.js",
+"js/social.js"
+],
+"فرقع {} حلوى من اللون {} في {} حركة": [
+"js/levels.js"
+],
+"فرقيع شاطر": [
+"js/games/pop.js"
+],
+"فرقيع مبتدئ": [
+"js/games/pop.js"
+],
+"في زحمة تسجيل دلوقتي. جرّب كمان شوية.": [
+"js/social.js"
+],
+"فين اللون المختلف؟": [
+"js/games/speed.js"
+],
+"ق": [
+"index.html"
+],
+"قاموس صغير": [
+"js/games/word.js"
+],
+"قاموس ماشي": [
+"js/games/word.js",
+"js/meta.js"
+],
+"قاهر الزعماء": [
+"js/meta.js"
+],
+"قبول": [
+"js/social.js"
+],
+"قرب": [
+"js/levels.js"
+],
+"قريبة! نعيد الجولة": [
+"js/games/mem.js"
+],
+"قرّبت جدًا! جرّب تاني وهتعدّيها.": [
+"js/app.js"
+],
+"قنابل": [
+"js/games/pop.js",
+"js/levels.js"
+],
+"قنبلة": [
+"js/levels.js"
+],
+"قنبلة!": [
+"js/games/pop.js"
+],
+"كتاب": [
+"js/levels.js"
+],
+"كرسي": [
+"js/levels.js"
+],
+"كسبت صاحبك": [
+"js/meta.js"
+],
+"كسبت!": [
+"js/app.js",
+"js/online.js"
+],
+"كسرت {} صخور": [
+"js/games/pop.js"
+],
+"كسرت صخرة": [
+"js/games/pop.js"
+],
+"كل الكلمات ({})": [
+"js/levels.js"
+],
+"كل محاولة بتعلّم مخك حاجة. يلا تاني!": [
+"js/app.js"
+],
+"كلمات: {} / {}": [
+"js/games/word.js"
+],
+"كلمة اليوم": [
+"js/meta.js"
+],
+"كلمة حلوة!": [
+"js/games/word.js"
+],
+"كلمة من": [
+"js/games/word.js"
+],
+"كمّل": [
+"js/games/speed.js"
+],
+"كمّل 4 عوالم": [
+"js/meta.js"
+],
+"كمّل عالم كامل": [
+"js/meta.js"
+],
+"كمّل: مستوى": [
+"js/app.js"
+],
+"كود الأوضة {}": [
+"js/online.js"
+],
+"كود الصاحب 6 حروف/أرقام": [
+"js/social.js"
+],
+"كود الصاحب بتاعك": [
+"js/social.js"
+],
+"كود صاحبك": [
+"js/social.js"
+],
+"كودك:": [
+"js/social.js"
+],
+"كوّن {} من الحروف دي قبل ما {} ثانية يخلصوا": [
+"js/levels.js"
+],
+"كوّن كلمات من الحروف. مفتوح من البداية.": [
+"js/levels.js"
+],
+"كوّن كلمة": [
+"index.html",
+"js/games/word.js",
+"js/levels.js",
+"js/social.js"
+],
+"ل": [
+"index.html"
+],
+"لاعب": [
+"js/social.js"
+],
+"لاقي 10 كلمات في «كوّن كلمة»": [
+"js/meta.js"
+],
+"لاقي 100 كلمة في «كوّن كلمة»": [
+"js/meta.js"
+],
+"لاقي 60 كلمة في «كوّن كلمة»": [
+"js/meta.js"
+],
+"لخبط": [
+"js/games/word.js"
+],
+"لسه ما ضفتش حد. ابعت كودك لصاحبك (دوس على الكود فوق) أو اكتب كوده هنا.": [
+"js/social.js"
+],
+"لسه ما لعبتش {} {}، العب وهتدخل الترتيب.": [
+"js/social.js"
+],
+"لسه ما لعبتهاش": [
+"js/app.js"
+],
+"لسه ما لعبش": [
+"js/social.js"
+],
+"لسه محدش دخل الترتيب ده. العب {} وهتظهر هنا.": [
+"js/social.js"
+],
+"لعب حر": [
+"index.html"
+],
+"لغز": [
+"js/games/word.js"
+],
+"لغز مش موجود:": [
+"js/levels.js"
+],
+"لقيت {} كلمة وخلّصت {} {}": [
+"js/games/word.js"
+],
+"لقيتها قبل كده": [
+"js/games/word.js"
+],
+"لو مسحت بيانات المتصفح أو غيّرت الجهاز، الحساب بيضيع.": [
+"js/social.js"
+],
+"لوحة الأبطال": [
+"index.html"
+],
+"لوحة فرقع: الأسهم للتحرك و Enter للفرقعة": [
+"js/games/pop.js"
+],
+"لون": [
+"js/games/speed.js"
+],
+"ليك في كل لعبة، ومعاهم رمز عشوائي لجهازك. مفيش إيميل ولا رقم تليفون.": [
+"js/social.js"
+],
+"ماتش تاني": [
+"js/online.js"
+],
+"مبتدئ": [
+"js/progress.js"
+],
+"متأكد؟ دوس تاني خلال 4 ثواني للمسح": [
+"js/app.js"
+],
+"متحمّس": [
+"js/progress.js"
+],
+"متدرّب": [
+"js/progress.js"
+],
+"مثالي": [
+"js/meta.js"
+],
+"مخ بيسخّن": [
+"js/games/speed.js"
+],
+"مخ شغّال": [
+"js/games/speed.js"
+],
+"مخ نضيف": [
+"js/games/speed.js"
+],
+"مخك نار": [
+"js/games/speed.js"
+],
+"مخك نار!": [
+"js/games/speed.js"
+],
+"مدرسا": [
+"js/levels.js"
+],
+"مدمن ملعب": [
+"js/meta.js"
+],
+"مربع": [
+"js/games/mem.js"
+],
+"مربعات": [
+"js/levels.js"
+],
+"مربعات بتنوّر لحظة وتطفي. افتكرها كلها. كل مستوى بيزيد مربع.": [
+"index.html"
+],
+"مرحلة": [
+"js/games/pop.js"
+],
+"مرحلة {}": [
+"js/games/pop.js"
+],
+"مرحلة زعيم": [
+"js/app.js"
+],
+"مرعب الزعماء": [
+"js/meta.js"
+],
+"مستنيين صاحبك يخلّص...": [
+"js/online.js"
+],
+"مستنيين صاحبك يوافق...": [
+"js/online.js"
+],
+"مستنيين صاحبك...": [
+"js/online.js"
+],
+"مستوى {}": [
+"js/app.js",
+"js/games/mem.js"
+],
+"مستوى {}{}{}": [
+"js/app.js"
+],
+"مستوى خلّصته من {}": [
+"js/app.js"
+],
+"مسح كل التقدّم": [
+"js/app.js"
+],
+"مش المرة دي": [
+"js/app.js"
+],
+"مش في القايمة": [
+"js/games/word.js"
+],
+"مش قادرين نوصل للسيرفر. اتأكد من النت.": [
+"js/online.js",
+"js/social.js"
+],
+"مضاعف ×": [
+"js/games/speed.js"
+],
+"مطاردة اللون": [
+"js/meta.js"
+],
+"معاك 3 قلوب": [
+"js/app.js"
+],
+"معنى": [
+"js/games/speed.js"
+],
+"مفكّر": [
+"js/progress.js"
+],
+"مفيش أوضة بالكود ده. اتأكد من الكود.": [
+"js/online.js"
+],
+"مفيش لاعب بالكود ده. اتأكد من الكود.": [
+"js/social.js"
+],
+"مقفول": [
+"js/app.js"
+],
+"مكتبا": [
+"js/levels.js"
+],
+"ملعب المخ": [
+"index.html"
+],
+"ملعب المخ · نسخة {}": [
+"js/app.js"
+],
+"ملعبا": [
+"js/levels.js"
+],
+"ملفي": [
+"index.html",
+"js/app.js"
+],
+"ملك الفرقعة": [
+"js/games/pop.js"
+],
+"ممتاز!": [
+"js/app.js"
+],
+"من {} · {} نقطة": [
+"js/social.js"
+],
+"من أصحابك؟": [
+"js/social.js"
+],
+"مهام الأسبوع": [
+"js/app.js"
+],
+"مهام النهارده": [
+"js/app.js"
+],
+"مواظب": [
+"js/meta.js"
+],
+"مين يوقفك؟": [
+"js/games/speed.js"
+],
+"ناقص 3 ثواني": [
+"js/games/speed.js"
+],
+"نجمة من {}": [
+"js/app.js"
+],
+"نجومك القديمة أحسن. حسّنها عشان تاخد XP زيادة": [
+"js/app.js"
+],
+"نص الطريق": [
+"js/meta.js"
+],
+"نفس الحروف عندكم انتو الاتنين. اللي يجمع نقط أكتر في 90 ثانية يكسب، واللي يخلّص اللغز كله الأول بيقفل الماتش.": [
+"js/online.js"
+],
+"نفس المهارات بوقت أقل.": [
+"js/levels.js"
+],
+"نقطك:": [
+"js/online.js"
+],
+"هيتمسح حسابك وأصحابك ونتايجك من الترتيب نهائيًا، ومينفعش نرجّعهم. متأكد؟": [
+"js/social.js"
+],
+"وتخفيه من عندك؟": [
+"js/social.js"
+],
+"وصلت للحد الأقصى من الأصحاب.": [
+"js/social.js"
+],
+"وصلت لمرحلة {}": [
+"js/games/pop.js"
+],
+"وصلت لمستوى {}": [
+"js/games/mem.js"
+],
+"يا سلام!": [
+"js/games/pop.js"
+],
+"يا وحش!": [
+"js/games/speed.js"
+],
+"يلا": [
+"js/app.js"
+],
+"يلا!": [
+"js/online.js"
+],
+"يلا! دوس على اللي نوّروا": [
+"js/games/mem.js"
+],
+"يوم": [
+"js/app.js"
+],
+"يوم القنابل": [
+"js/meta.js"
+],
+"يوم النقط": [
+"js/meta.js"
+],
+"⚑ بلّغ عن لاعب بيستخدم اسم مسيء: بيختفي من عندك فورًا، ولو 3 لاعبين بلّغوا عنه بيختفي من الكل.": [
+"js/social.js"
+]
+}

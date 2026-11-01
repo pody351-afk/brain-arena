@@ -342,12 +342,14 @@ const App = {
     $("#settings").innerHTML = `<h2 class="h2">الإعدادات</h2>
       ${row("sound", "المؤثرات الصوتية", "أصوات الإجابة والفرقعة")}
       ${row("vibrate", "الاهتزاز", "على الموبايلات اللي بتدعمه")}
+      <button type="button" class="row-set" id="langBtn"><span>اللغة<small translate="no">العربية / English</small></span><b class="lang-val" translate="no">${I18N.lang === "en" ? "English" : "العربية"}</b></button>
       <button type="button" class="row-set danger" id="resetBtn">مسح كل التقدّم</button>
       <div class="note-box">ملعب المخ · نسخة ${APP_VERSION}<br>الحفظ حاليًا على الجهاز ده. لو مسحت بيانات المتصفح التقدّم هيتمسح.</div>`;
     document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click", () => {
       const k = b.dataset.set; Settings.set(k, !Settings.data[k]); b.setAttribute("aria-checked", !!Settings.data[k]);
       ensureAudio(); sfx.blip(); if (k === "vibrate") buzz(30); this.renderSound();
     }));
+    $("#langBtn").addEventListener("click", () => I18N.set(I18N.other()));
     const rb = $("#resetBtn"); let armed = false, t;
     rb.addEventListener("click", () => {
       if (!armed) { armed = true; rb.classList.add("armed"); rb.textContent = "متأكد؟ دوس تاني خلال 4 ثواني للمسح"; t = setTimeout(() => { armed = false; rb.classList.remove("armed"); rb.textContent = "مسح كل التقدّم"; }, 4000); return; }
@@ -355,13 +357,15 @@ const App = {
     });
   }
 };
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.7";
 
 /* ---------- ربط الأزرار ---------- */
 document.querySelectorAll(".card[data-g]").forEach(c => c.addEventListener("click", () => App.openGame(c.dataset.g)));
 document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => App.show(b.dataset.go)));
 $("#continueBtn").addEventListener("click", () => App.levelSheet(Progress.nextLevel()));
 $("#homePlayer").addEventListener("click", () => App.show("profile"));
+$("#langQuick").textContent = I18N.lang === "en" ? "عربي" : "EN"; // زرار سريع لتغيير اللغة
+$("#langQuick").addEventListener("click", () => I18N.set(I18N.other()));
 $("#dailyBtn").addEventListener("click", () => App.dailySheet());
 $("#questsBtn").addEventListener("click", () => App.show("quests"));
 $("#onlineBtn").addEventListener("click", () => App.show("online"));
@@ -376,7 +380,7 @@ $("#againBtn").addEventListener("click", () => App.openGame(App.free ? App.free.
 $("#soundBtn").addEventListener("click", () => { Settings.set("sound", !Settings.data.sound); App.renderSound(); ensureAudio(); sfx.blip(); });
 $("#shareBtn").addEventListener("click", () => {
   const g = App.free || SpeedBrain;
-  const text = `جبت ${scoreNow} في «${g.name}» على ملعب المخ (${g.rank(scoreNow)}). تقدر تغلبني؟`;
+  const text = I18N.t(`جبت ${scoreNow} في «${g.name}» على ملعب المخ (${g.rank(scoreNow)}). تقدر تغلبني؟`);
   const done = () => toast("اتنسخت! ابعتها لصحابك");
   try { navigator.clipboard.writeText(text).then(done, () => toast(text)); } catch (e) { toast(text); }
 });

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="46%" r="75%"><stop offset="0" stop-color="#6b3fd4"/><stop offset=".55" stop-color="#34205f"/><stop offset="1" stop-color="#150c26"/></radialGradient>
+    <linearGradient id="br" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset=".55" stop-color="#ffb13d"/><stop offset="1" stop-color="#ff6f61"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd54a" stop-opacity=".75"/><stop offset="1" stop-color="#ffd54a" stop-opacity="0"/></radialGradient>
+    <g id="lobes">
+      <circle cx="400" cy="420" r="150"/><circle cx="318" cy="540" r="125"/><circle cx="410" cy="610" r="130"/><circle cx="470" cy="500" r="130"/><circle cx="300" cy="430" r="95"/>
+    </g>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- أشعة -->
+  <g opacity=".16" fill="#fff"><path d="M512 520 L-40 150 L120 -40Z"/><path d="M512 520 L360 -60 L560 -60Z"/><path d="M512 520 L820 -60 L1060 60Z"/><path d="M512 520 L1090 330 L1090 560Z"/><path d="M512 520 L1090 820 L930 1090Z"/><path d="M512 520 L610 1090 L400 1090Z"/><path d="M512 520 L-60 880 L-60 640Z"/></g>
+  <circle cx="512" cy="520" r="470" fill="url(#glow)"/>
+  <!-- مربعات بتطير -->
+  <g>
+    <rect x="96" y="132" width="170" height="170" rx="46" fill="#3ddc97" transform="rotate(-14 181 217)"/>
+    <rect x="770" y="104" width="170" height="170" rx="46" fill="#ff6b6b" transform="rotate(12 855 189)"/>
+    <rect x="70" y="690" width="160" height="160" rx="44" fill="#4d9dff" transform="rotate(10 150 770)"/>
+    <rect x="800" y="700" width="160" height="160" rx="44" fill="#b388ff" transform="rotate(-12 880 780)"/>
+    <g fill="#fff" fill-opacity=".3"><ellipse cx="170" cy="190" rx="52" ry="18" transform="rotate(-14 170 190)"/><ellipse cx="846" cy="164" rx="52" ry="18" transform="rotate(12 846 164)"/></g>
+  </g>
+  <!-- المخ -->
+  <g transform="translate(0 20)">
+    <g fill="#1d1330" stroke="#1d1330" stroke-width="34" stroke-linejoin="round"><use href="#lobes"/><g transform="translate(1024 0) scale(-1 1)"><use href="#lobes"/></g><rect x="452" y="650" width="120" height="110" rx="40"/></g>
+    <g fill="url(#br)"><use href="#lobes"/><g transform="translate(1024 0) scale(-1 1)"><use href="#lobes"/></g><rect x="452" y="650" width="120" height="110" rx="40"/></g>
+    <!-- التعاريج -->
+    <g fill="none" stroke="#c4501f" stroke-opacity=".55" stroke-width="16" stroke-linecap="round">
+      <path d="M512 330 C 500 410, 524 470, 506 560 S 520 650, 512 690"/>
+      <path d="M330 380 C 380 360, 420 400, 400 450"/><path d="M290 520 C 340 500, 380 540, 360 590"/><path d="M420 560 C 450 540, 470 580, 450 620"/>
+      <g transform="translate(1024 0) scale(-1 1)"><path d="M330 380 C 380 360, 420 400, 400 450"/><path d="M290 520 C 340 500, 380 540, 360 590"/><path d="M420 560 C 450 540, 470 580, 450 620"/></g>
+    </g>
+    <!-- لمعة -->
+    <ellipse cx="380" cy="330" rx="70" ry="30" fill="#fff" fill-opacity=".45" transform="rotate(-25 380 330)"/>
+  </g>
+  <!-- برق/شرارة -->
+  <path d="M560 250 L470 450 L545 450 L500 640 L650 400 L565 400 L615 250Z" fill="#fff" stroke="#1d1330" stroke-width="14" stroke-linejoin="round" transform="translate(40 -10)"/>
+  <g fill="#fff"><path d="M880 420 l12 34 34 12 -34 12 -12 34 -12 -34 -34 -12 34 -12z"/><path d="M130 520 l9 26 26 9 -26 9 -9 26 -9 -26 -26 -9 26 -9z"/><path d="M700 900 l9 26 26 9 -26 9 -9 26 -9 -26 -26 -9 26 -9z"/></g>
+</svg>

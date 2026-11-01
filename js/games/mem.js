@@ -33,7 +33,7 @@ const Mem = {
     const left = this.isLevel() ? `جولة ${Math.min(this.s.round + 1, this.cfg.rounds)} / ${this.cfg.rounds}` : `مستوى ${this.s.level}`;
     setInfo(`<span>${left}</span><span class="lives">${h}</span>`);
   },
-  msg(t) { $("#memMsg").textContent = t; },
+  msg(t) { const e = $("#memMsg"); if (e) e.textContent = t; },
   round() {
     const v = this.isLevel() ? this.cfg.variant : "squares";
     if (v === "numbers") this.roundNumbers(); else this.roundGrid(v);

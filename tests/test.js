@@ -19,7 +19,7 @@ function check(cond, name, extra = '') {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function newPage(browser, vp = { width: 390, height: 844 }, mobile = true) {
-  const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, hasTouch: mobile, isMobile: mobile });
+  const ctx = await browser.newContext({ locale: 'ar-EG', viewport: vp, deviceScaleFactor: 1, hasTouch: mobile, isMobile: mobile });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); // نحاكي عدم وجود إنترنت للخطوط
   const page = await ctx.newPage();
   page.errors = [];

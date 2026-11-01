@@ -27,4 +27,4 @@ Data Not Used to Track You. الإعلانات: مفيش.
 متظبط في التطبيق (ITSAppUsesNonExemptEncryption = false): بنستخدم HTTPS/WSS العادي بس.
 
 ## اللقطات
-iPhone 6.9" أو 6.7": ملفات `appstore/screenshots/` (1290×2796). التطبيق iPhone بس.
+iPhone 6.9" أو 6.7": ملفات `appstore/screenshots/ar/` (للنسخة العربي) و`appstore/screenshots/en/` (للإنجليزي)، مقاس 1290×2796 وعليها عبارات تجذب الناس. التطبيق iPhone بس.

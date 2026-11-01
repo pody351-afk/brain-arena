@@ -402,3 +402,7 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
 /* تطبيق iOS: من غير سحب/ارتداد للصفحة، والكتابة في خانات الإدخال شغالة */
 html,body{overscroll-behavior:none}
 input,textarea{-webkit-user-select:text;user-select:text}
+
+/* الإنجليزي (يسار لليمين): الأسهم لازم تتعكس */
+#app[dir="ltr"] .back{transform:scaleX(-1)}
+#app[dir="ltr"] .continue .go,#app[dir="ltr"] .continue>.ico{transform:scaleX(-1)}
