@@ -8,7 +8,7 @@ const Mem = {
   start(cfg = {}, hooks = {}) {
     this.cfg = Object.assign({ mode: "free", variant: "squares", size: 3, count: 3, rounds: 0, grow: 1, fast: false }, cfg);
     this.hooks = hooks;
-    this.s = { level: 1, round: 0, lives: 3, score: 0, streak: 0, phase: "show", targets: new Set(), seq: [], pos: 0, found: new Set(), timers: [], alive: true, input: "" };
+    this.s = { level: 1, round: 0, lives: 3 + (this.cfg.bonusLives | 0), score: 0, streak: 0, phase: "show", targets: new Set(), seq: [], pos: 0, found: new Set(), timers: [], alive: true, input: "" };
     ui.stage.innerHTML = '<div class="mem-wrap"><div class="mem-msg" id="memMsg"></div><div id="memBody" style="display:contents"></div></div>';
     this.onDoc = e => this.onKeyDoc(e);
     document.addEventListener("keydown", this.onDoc);
@@ -29,7 +29,7 @@ const Mem = {
     const n = this.size(); return Math.min(n * n - 4, 2 + this.s.level);
   },
   hud() {
-    let h = ""; for (let i = 0; i < 3; i++) h += `<i class="${i < this.s.lives ? "" : "off"}"></i>`;
+    let h = ""; for (let i = 0; i < 3 + (this.cfg.bonusLives | 0); i++) h += `<i class="${i < this.s.lives ? "" : "off"}"></i>`;
     const left = this.isLevel() ? `جولة ${Math.min(this.s.round + 1, this.cfg.rounds)} / ${this.cfg.rounds}` : `مستوى ${this.s.level}`;
     setInfo(`<span>${left}</span><span class="lives">${h}</span>`);
   },

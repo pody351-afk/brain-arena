@@ -406,3 +406,4 @@ input,textarea{-webkit-user-select:text;user-select:text}
 /* الإنجليزي (يسار لليمين): الأسهم لازم تتعكس */
 #app[dir="ltr"] .back{transform:scaleX(-1)}
 #app[dir="ltr"] .continue .go,#app[dir="ltr"] .continue>.ico{transform:scaleX(-1)}
+.boosts{margin-top:10px}.boosts .btn{width:100%;min-height:44px;justify-content:center}.boosts [aria-pressed="true"]{outline:2px solid var(--mango)}

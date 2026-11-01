@@ -73,3 +73,13 @@ const Progress = {
     return old;
   }
 };
+
+/* العملات: بتتكسب باللعب بس (من تحسين النجوم)، وبتتصرف على مساعدات المراحل الصعبة. مفيش شراء بفلوس حقيقية في النسخة دي. */
+const Coins = {
+  COST: { extra: 15, hint: 20, skip: 80, skipBoss: 150 },
+  get() { const v = store.get("coins", 0); return typeof v === "number" && v >= 0 ? Math.floor(v) : 0; },
+  add(n) { n = Math.max(0, n | 0); if (n) store.set("coins", this.get() + n); return n; },
+  spend(n) { const c = this.get(); if (n > c) return false; store.set("coins", c - n); return true; },
+  forXp(xp) { return xp > 0 ? Math.ceil(xp / 8) : 0; },
+  isHard(L) { return !L.daily && (L.boss || L.n >= 13); }
+};

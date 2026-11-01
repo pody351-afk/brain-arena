@@ -33,7 +33,7 @@ const App = {
     const p = Progress.levelProgress();
     return `<div class="lvl-badge">${p.n}</div><div class="who"><div class="ttl">${Progress.title(p.n)}</div>
       <div class="xpt">${Progress.data.xp} XP · فاضل ${p.span - p.into} للمستوى ${p.n + 1}</div><div class="xpbar"><i style="transform:scaleX(${p.frac.toFixed(3)})"></i></div></div>
-      <div class="stars-sum"><i class="star on" style="width:14px;height:14px;vertical-align:-1px"></i> ${Progress.totalStars()}</div>`;
+      <div class="stars-sum"><i class="star on" style="width:14px;height:14px;vertical-align:-1px"></i> ${Progress.totalStars()} · <span aria-label="عملات">🪙</span> ${Coins.get()}</div>`;
   },
   render_home() {
     $("#homePlayer").innerHTML = this.playerChip();
@@ -117,12 +117,33 @@ const App = {
       <div class="rules">${limits}
         <div><i class="star on"></i>${starRule(L.boss ? "boss" : L.game)}</div>
         <div>المكافأة: لحد ${maxXp} XP ${stars ? `· نجومك دلوقتي ${stars} من 3` : ""}</div></div>
+      ${this.boostHtml(L)}
       <div class="btns"><button class="btn main" type="button" id="goLevel">${stars ? "العب تاني" : "ابدأ"}</button><button class="btn" type="button" id="closeSheet" style="grid-column:1/-1">رجوع</button></div>`, w.color);
-    $("#goLevel").addEventListener("click", () => this.startLevel(L));
+    const boost = { extra: false, hint: false };
+    document.querySelectorAll("[data-boost]").forEach(b => b.addEventListener("click", () => {
+      const k = b.dataset.boost; boost[k] = !boost[k];
+      b.setAttribute("aria-pressed", boost[k]); b.classList.toggle("main", boost[k]);
+      const cost = (boost.extra ? Coins.COST.extra : 0) + (boost.hint ? Coins.COST.hint : 0);
+      const t = $("#boostTotal"); if (t) t.textContent = cost ? `هيتخصم ${cost} عملة (معاك ${Coins.get()})` : `معاك ${Coins.get()} عملة`;
+    }));
+    $("#goLevel").addEventListener("click", () => {
+      const cost = (boost.extra ? Coins.COST.extra : 0) + (boost.hint ? Coins.COST.hint : 0);
+      if (cost && !Coins.spend(cost)) { const t = $("#boostTotal"); if (t) t.textContent = "عملاتك مش كفاية. العب مراحل أسهل واكسب عملات"; return; }
+      this.startLevel(L, boost);
+    });
     $("#closeSheet").addEventListener("click", () => this.closeSheet());
     $("#goLevel").focus();
   },
 
+  boostHtml(L) {
+    if (!Coins.isHard(L)) return "";
+    const word = L.boss ? L.parts.some(p => p.game === "word") : L.game === "word";
+    const lab = L.boss ? "وقت / حركات / قلب زيادة" : L.game === "speed" || L.game === "word" ? "وقت زيادة (+10 ثواني)" : L.game === "pop" ? "حركات زيادة (+5)" : "قلب زيادة (+1)";
+    return `<div class="rules boosts"><div><b>مساعدات للمراحل الصعبة</b></div>
+      <button class="btn" type="button" data-boost="extra" aria-pressed="false">${lab} · ${Coins.COST.extra} عملة</button>
+      ${word ? `<button class="btn" type="button" data-boost="hint" aria-pressed="false">تلميحات زيادة (+2) · ${Coins.COST.hint} عملة</button>` : ""}
+      <div id="boostTotal">معاك ${Coins.get()} عملة</div></div>`;
+  },
   limitsFor(L) { return L.boss ? "" : L.game === "speed" ? `<div>الوقت: ${L.cfg.time} ثانية · الغلطة بـ 3 ثواني</div>` : L.game === "mem" ? "<div>معاك 3 قلوب</div>" : L.game === "word" ? `<div>الوقت: ${L.cfg.time} ثانية · ${L.cfg.hints} تلميحات</div>` : `<div>الحركات: ${L.cfg.moves}</div>`; },
 
   /* ---------- التحدي اليومي ---------- */
@@ -168,10 +189,10 @@ const App = {
   },
 
   /* ---------- تشغيل مستوى ---------- */
-  startLevel(L) {
+  startLevel(L, boost) {
     ensureAudio();
     this.free = null;
-    this.run = { level: L, runId: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8), part: 0, results: [] };
+    this.run = { level: L, boost: boost || {}, runId: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8), part: 0, results: [] };
     hud.offset = 0;
     this.startPart();
   },
@@ -180,7 +201,10 @@ const App = {
     const game = GAMES[part.game];
     this.enterPlay(L.daily ? L.title : L.boss ? `زعيم ${L.n / 10} · ${run.part + 1}/3` : `مستوى ${L.n}`);
     resetScore();
-    const go = () => { this.current = game; game.start(part.cfg, { end: r => this.onPartEnd(r) }); };
+    const cfg = Object.assign({}, part.cfg), b = run.boost || {};
+    if (b.extra) { if (part.game === "speed" || part.game === "word") cfg.time += 10; else if (part.game === "pop") cfg.moves += 5; else if (part.game === "mem") cfg.bonusLives = 1; }
+    if (b.hint && part.game === "word") cfg.hints += 2;
+    const go = () => { this.current = game; game.start(cfg, { end: r => this.onPartEnd(r) }); };
     if (L.boss) this.interstitial(`الجزء ${run.part + 1} من 3`, GAME_NAMES[part.game], goalText(part), go);
     else go();
   },
@@ -210,6 +234,7 @@ const App = {
       return;
     }
     const res = Progress.applyResult(L, run.runId, { won, stars, score });
+    res.coins = won && !res.duplicate ? Coins.add(Coins.forXp(res.xp)) : 0;
     Meta.track({ mode: "level", results: run.results, won, stars, boss: !!L.boss });
     setTimeout(() => this.resultSheet(L, won, res, score, stars), won ? 300 : 500);
   },
@@ -233,7 +258,7 @@ const App = {
       const lvlUp = res.levelUpTo > res.levelUpFrom;
       body = `<div class="res-title win">${runStars === 3 ? "ممتاز!" : "كسبت!"}</div>
         <div class="stars-big" aria-label="${runStars} نجوم">${[0, 1, 2].map(i => `<i class="star${i < runStars ? " on" : ""}"></i>`).join("")}</div>
-        <div class="res-xp">${res.xp ? "+" + res.xp + " XP" : res.oldStars >= 3 ? "عندك 3 نجوم في المستوى ده من قبل" : "نجومك القديمة أحسن. حسّنها عشان تاخد XP زيادة"}</div>
+        <div class="res-xp">${res.coins ? `+${res.coins} 🪙 · ` : ""}${res.xp ? "+" + res.xp + " XP" : res.oldStars >= 3 ? "عندك 3 نجوم في المستوى ده من قبل" : "نجومك القديمة أحسن. حسّنها عشان تاخد XP زيادة"}</div>
         ${res.worldBonus ? `<div class="res-msg">خلّصت ${w.name}! مكافأة ${res.worldBonus} XP</div>` : ""}
         ${lvlUp ? `<div class="res-msg" style="color:var(--mango);font-weight:900">رتبة جديدة: مستوى ${res.levelUpTo} · ${Progress.title(res.levelUpTo)}</div>` : ""}
         <div class="res-msg">النقط: ${score}</div>
@@ -243,6 +268,7 @@ const App = {
       body = `<div class="res-title">مش المرة دي</div>
         <div class="res-msg">${pick(lose)}</div>
         <div class="res-msg">${esc(L.goal)}</div>
+        ${Coins.isHard(L) && !Progress.stars(L.n) ? `<div class="res-msg"><button class="btn" type="button" id="rSkip">تخطّي المرحلة · ${L.boss ? Coins.COST.skipBoss : Coins.COST.skip} عملة (معاك ${Coins.get()})</button><div id="skipMsg"></div></div>` : ""}
         <div class="btns"><button class="btn main" type="button" id="rAgain">حاول تاني</button><button class="btn" type="button" id="rMap2" style="grid-column:1/-1">الخريطة</button></div>`;
     }
     this.openSheet(`<div class="kicker">${w.name} · مستوى ${L.n}</div>${body}`, w.color);
@@ -252,6 +278,12 @@ const App = {
     const on = (id, fn) => { const b = $("#" + id); if (b) b.addEventListener("click", fn); };
     on("rNext", () => { this.closeSheet(); this.levelSheet(next); });
     on("rAgain", () => this.startLevel(L));
+    on("rSkip", () => {
+      const cost = L.boss ? Coins.COST.skipBoss : Coins.COST.skip;
+      if (Progress.stars(L.n) || !Coins.spend(cost)) { const m = $("#skipMsg"); if (m) m.textContent = "عملاتك مش كفاية. العب مراحل أسهل واكسب عملات"; return; }
+      Progress.applyResult(L, "skip-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), { won: true, stars: 1, score: 0 });
+      this.closeSheet(); this.show("map");
+    });
     on("rMap", () => { this.closeSheet(); this.show("map"); });
     on("rMap2", () => { this.closeSheet(); this.show("map"); });
     const first = $("#rNext") || $("#rAgain"); if (first) first.focus();
