@@ -20,13 +20,15 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 60
     env:
-      TEAM: ${{ secrets.APPLE_TEAM_ID }}
-      KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+      RAW_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+      RAW_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      RAW_ISSUER: ${{ secrets.ASC_ISSUER_ID }}
     steps:
       - name: Check secrets
         run: |
-          for v in TEAM KEY_ID ISSUER; do [ -n "${!v}" ] || { echo "سر ناقص: $v"; exit 1; }; done
+          # بنشيل أي مسافات أو سطور زيادة اتلصقت مع الأسرار
+          for v in TEAM KEY_ID ISSUER; do r="RAW_$v"; c=$(printf '%s' "${!r}" | tr -d '[:space:]'); [ -n "$c" ] || { echo "سر ناقص: $v"; exit 1; }; echo "$v=$c" >> "$GITHUB_ENV"; done
+          k=$(printf '%s' "$RAW_KEY_ID" | tr -d '[:space:]'); [[ "$k" =~ ^[A-Z0-9]{10}$ ]] || { echo "ASC_KEY_ID لازم يكون 10 حروف/أرقام بس (طوله دلوقتي ${#k})"; exit 1; }
           [ -n "${{ secrets.ASC_KEY_P8 }}" ] || { echo "سر ناقص: ASC_KEY_P8"; exit 1; }
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
